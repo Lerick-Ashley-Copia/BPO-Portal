@@ -17,7 +17,7 @@ export function PortalLayout() {
     <div className="min-h-svh flex flex-col">
       <header className="border-b border-gray-200 dark:border-gray-800">
         <div className="mx-auto max-w-6xl flex items-center justify-between px-4 py-3">
-          <span className="font-semibold">BPO Portal</span>
+          <span className="font-semibold">JAE Philus Admin Portal</span>
           <div className="flex items-center gap-4 text-sm">
             <span className="text-gray-500">{user?.email}</span>
             <button
