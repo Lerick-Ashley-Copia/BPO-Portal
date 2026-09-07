@@ -1059,16 +1059,16 @@ Avoid putting all business logic directly inside API route handlers.
 
 ## Phase 6 — Administration
 
-* [ ] User management
-  * Admin creates an account by entering the new user's email; the system
-    generates a password and emails it to that address (admin does not
-    set or see the password). Requires an email-sending service to be
-    provisioned (e.g. Resend) — not yet set up.
-* [ ] Employee management
-* [ ] Team management
-* [ ] Department management
-* [ ] Content management
-* [ ] Document management
+* [x] User management — admin creates an account (email/name/roles); backend generates a
+  single-use, 48-hour setup token and emails a set-password link via Gmail API (OAuth,
+  authenticated as a real account, not a plaintext password and not a shared sender). Admin
+  can also reassign any user's roles from the same page.
+* [x] Employee management — covered in Phase 4 (HR/Admin can edit position, status, team,
+  department for any employee)
+* [ ] Team management — teams can be assigned to employees (Phase 4) but not created/edited/deleted yet
+* [ ] Department management — same as above; only seeded departments exist so far
+* [ ] Content management — create/edit UI for Announcements and Benefits (currently read-only)
+* [ ] Document management — upload UI (download already works via Phase 3's presigned URLs)
 * [ ] Audit logs
 * [ ] Administrative dashboard
 
