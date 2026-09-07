@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { useApiData } from '../../hooks/useApiData'
 import type { Announcement } from '../announcements/types'
+import { AdminWidgets } from './AdminWidgets'
 
 const roleLabels: Record<string, string> = {
   employee: 'Employee',
@@ -35,6 +36,8 @@ export function DashboardPage() {
           {user.roles.map((role) => roleLabels[role] ?? role).join(', ')}
         </p>
       )}
+
+      {user?.roles.includes('admin') && <AdminWidgets />}
 
       <div className="mt-6 grid gap-6 md:grid-cols-3">
         <section className="md:col-span-2">

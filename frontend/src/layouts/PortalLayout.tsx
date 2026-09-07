@@ -9,6 +9,7 @@ const navItems = [
   { to: '/reports', label: 'Weekly Reports' },
   { to: '/documents', label: 'Documents' },
   { to: '/users', label: 'Users', roles: ['admin'] as const },
+  { to: '/audit-logs', label: 'Audit Logs', roles: ['admin'] as const },
 ]
 
 export function PortalLayout() {

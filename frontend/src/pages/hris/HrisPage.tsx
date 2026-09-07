@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
@@ -200,7 +200,78 @@ function EmployeeRow({
   )
 }
 
+function CreateTeamOrDepartment({
+  departments,
+  onCreated,
+}: {
+  departments: Department[]
+  onCreated: (result: { department?: Department; team?: Team }) => void
+}) {
+  const [kind, setKind] = useState<'department' | 'team'>('department')
+  const [name, setName] = useState('')
+  const [departmentId, setDepartmentId] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    if (kind === 'team' && !departmentId) {
+      setError('Choose a department for the new team')
+      return
+    }
+    setSubmitting(true)
+    try {
+      if (kind === 'department') {
+        const dept = await api.post<Department>('/directory', { kind: 'department', name })
+        onCreated({ department: dept })
+      } else {
+        const team = await api.post<Team>('/directory', { kind: 'team', name, departmentId })
+        onCreated({ team })
+      }
+      setName('')
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not create')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+      <div className="space-y-1">
+        <label className="text-sm text-gray-600">Type</label>
+        <select value={kind} onChange={(e) => setKind(e.target.value as 'department' | 'team')} className="rounded border border-gray-300 px-2 py-1.5 text-sm">
+          <option value="department">Department</option>
+          <option value="team">Team</option>
+        </select>
+      </div>
+      <div className="space-y-1">
+        <label className="text-sm text-gray-600">Name</label>
+        <input required value={name} onChange={(e) => setName(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5 text-sm" />
+      </div>
+      {kind === 'team' && (
+        <div className="space-y-1">
+          <label className="text-sm text-gray-600">Department</label>
+          <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5 text-sm">
+            <option value="">Select…</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <button type="submit" disabled={submitting} className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+        {submitting ? 'Creating…' : 'Create'}
+      </button>
+    </form>
+  )
+}
+
 function EmployeeDirectory() {
+  const { user } = useAuth()
+  const isAdmin = user?.roles.includes('admin') ?? false
   const [employees, setEmployees] = useState<EmployeeRecord[] | null>(null)
   const [departments, setDepartments] = useState<Department[]>([])
   const [teams, setTeams] = useState<Team[]>([])
@@ -210,13 +281,12 @@ function EmployeeDirectory() {
   useEffect(() => {
     Promise.all([
       api.get<EmployeeRecord[]>('/employees'),
-      api.get<Department[]>('/departments'),
-      api.get<Team[]>('/teams'),
+      api.get<{ departments: Department[]; teams: Team[] }>('/directory'),
     ])
-      .then(([e, d, t]) => {
+      .then(([e, dir]) => {
         setEmployees(e)
-        setDepartments(d)
-        setTeams(t)
+        setDepartments(dir.departments)
+        setTeams(dir.teams)
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Something went wrong'))
       .finally(() => setLoading(false))
@@ -224,37 +294,54 @@ function EmployeeDirectory() {
 
   if (loading) return <LoadingState />
   if (error) return <ErrorState message={error} />
-  if (!employees || employees.length === 0) {
-    return <p className="text-sm text-gray-500">No employee records yet.</p>
-  }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-800">
-            <th className="py-2 pr-4 font-medium">Employee</th>
-            <th className="py-2 pr-4 font-medium">Position</th>
-            <th className="py-2 pr-4 font-medium">Department</th>
-            <th className="py-2 pr-4 font-medium">Team</th>
-            <th className="py-2 pr-4 font-medium">Status</th>
-            <th className="py-2 font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {employees.map((employee) => (
-            <EmployeeRow
-              key={employee.id}
-              employee={employee}
-              departments={departments}
-              teams={teams}
-              onSaved={(updated) =>
-                setEmployees((prev) => prev?.map((e) => (e.id === updated.id ? updated : e)) ?? null)
-              }
-            />
-          ))}
-        </tbody>
-      </table>
+    <div>
+      {isAdmin && (
+        <div className="mb-4">
+          <CreateTeamOrDepartment
+            departments={departments}
+            onCreated={(result) => {
+              if (result.department) setDepartments((prev) => [...prev, result.department!])
+              if (result.team) setTeams((prev) => [...prev, result.team!])
+            }}
+          />
+        </div>
+      )}
+
+      {(!employees || employees.length === 0) && (
+        <p className="text-sm text-gray-500">No employee records yet.</p>
+      )}
+
+      {employees && employees.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-800">
+                <th className="py-2 pr-4 font-medium">Employee</th>
+                <th className="py-2 pr-4 font-medium">Position</th>
+                <th className="py-2 pr-4 font-medium">Department</th>
+                <th className="py-2 pr-4 font-medium">Team</th>
+                <th className="py-2 pr-4 font-medium">Status</th>
+                <th className="py-2 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {employees.map((employee) => (
+                <EmployeeRow
+                  key={employee.id}
+                  employee={employee}
+                  departments={departments}
+                  teams={teams}
+                  onSaved={(updated) =>
+                    setEmployees((prev) => prev?.map((e) => (e.id === updated.id ? updated : e)) ?? null)
+                  }
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

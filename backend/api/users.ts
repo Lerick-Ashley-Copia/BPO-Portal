@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma.js'
 import { hashPassword } from '../lib/auth.js'
 import { sendEmail } from '../lib/email.js'
 import { requireAuth, type AuthedRequest } from '../lib/middleware.js'
+import { logAudit } from '../lib/audit.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): GET /users, POST /users, PUT /users/:id.
@@ -76,6 +77,7 @@ async function handleCreate(req: AuthedRequest, res: VercelResponse) {
      <p>If you weren't expecting this, you can ignore this email.</p>`,
   )
 
+  logAudit(req.auth.sub, 'create', 'user', user.id)
   res.status(201).json({ id: user.id, email: user.email, name: user.name, roles: user.roles })
 }
 
@@ -92,6 +94,7 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
     select: userSelect,
   })
 
+  logAudit(req.auth.sub, 'update_roles', 'user', id)
   res.status(200).json(user)
 }
 

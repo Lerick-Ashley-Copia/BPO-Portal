@@ -2,6 +2,7 @@ import type { VercelResponse } from '@vercel/node'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../lib/middleware.js'
+import { logAudit } from '../lib/audit.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): GET /employees, GET /employees/me,
@@ -87,6 +88,7 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
     data: parsed.data,
     ...employeeSelect,
   })
+  logAudit(req.auth.sub, 'update', 'employee', id)
   res.status(200).json(serialize(employee))
 }
 

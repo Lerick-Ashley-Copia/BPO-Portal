@@ -10,6 +10,8 @@
     { "source": "/api/employees/me", "destination": "/api/employees?sub=me" },
     { "source": "/api/employees/:id", "destination": "/api/employees?sub=:id" },
     { "source": "/api/users/:id", "destination": "/api/users?sub=:id" },
-    { "source": "/api/documents/:id/download", "destination": "/api/documents?sub=:id" }
+    { "source": "/api/documents/:id/download", "destination": "/api/documents?sub=:id" },
+    { "source": "/api/announcements/:id", "destination": "/api/announcements?sub=:id" },
+    { "source": "/api/benefits/:id", "destination": "/api/benefits?sub=:id" }
   ]
 }
