@@ -147,6 +147,27 @@ async function handleReviewLeaveRequest(req: AuthedRequest, res: VercelResponse,
 
 // ---- Attendance ----
 
+async function handleListAttendance(req: AuthedRequest, res: VercelResponse) {
+  const where = isHrOrAdmin(req) ? {} : { employee: { userId: req.auth.sub } }
+
+  const records = await prisma.attendanceRecord.findMany({
+    where,
+    include: { employee: { include: { user: { select: { name: true } } } } },
+    orderBy: { date: 'desc' },
+    take: 200,
+  })
+
+  res.status(200).json(
+    records.map((r) => ({
+      id: r.id,
+      employeeName: r.employee.user.name,
+      date: r.date,
+      checkInAt: r.checkInAt,
+      checkOutAt: r.checkOutAt,
+    })),
+  )
+}
+
 async function handleAttendanceToday(req: AuthedRequest, res: VercelResponse) {
   const employee = await myEmployee(req)
   if (!employee) {
@@ -226,6 +247,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
   }
 
   if (resource === 'attendance') {
+    if (!sub && req.method === 'GET') return handleListAttendance(req, res)
     if (sub === 'today' && req.method === 'GET') return handleAttendanceToday(req, res)
     if (sub === 'checkin' && req.method === 'POST') return handleCheckIn(req, res)
     if (sub === 'checkout' && req.method === 'POST') return handleCheckOut(req, res)

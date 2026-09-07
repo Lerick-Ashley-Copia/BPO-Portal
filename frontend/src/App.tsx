@@ -3,6 +3,7 @@ import { AuthProvider } from './auth/AuthContext'
 import { RequireAuth } from './auth/RequireAuth'
 import { PortalLayout } from './layouts/PortalLayout'
 import { AnnouncementsPage } from './pages/announcements/AnnouncementsPage'
+import { AttendancePage } from './pages/attendance/AttendancePage'
 import { AuditLogsPage } from './pages/audit-logs/AuditLogsPage'
 import { BenefitsPage } from './pages/benefits/BenefitsPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/leave" element={<LeaveRequestsPage />} />
+            <Route path="/attendance" element={<AttendancePage />} />
             <Route
               path="/users"
               element={

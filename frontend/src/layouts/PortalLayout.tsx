@@ -11,6 +11,7 @@ const navItems = [
   { to: '/hris', label: 'HRIS' },
   { to: '/reports', label: 'Weekly Reports', roles: ['team_leader', 'manager', 'hr', 'admin'] as const },
   { to: '/leave', label: 'Leave Requests' },
+  { to: '/attendance', label: 'Attendance' },
   { to: '/documents', label: 'Documents' },
   { to: '/users', label: 'Users', roles: ['admin'] as const },
   { to: '/audit-logs', label: 'Audit Logs', roles: ['admin'] as const },

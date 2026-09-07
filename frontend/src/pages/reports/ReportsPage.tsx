@@ -172,7 +172,8 @@ function ReportCard({ report, onUpdated }: { report: WeeklyReport; onUpdated: (r
     }
   }
 
-  const dateFmt = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const dateFmt = (d: string) =>
+    new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 
   return (
     <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">

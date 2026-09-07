@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
+import { formatDateOnly } from '../../utils/dates'
 import type { LeaveRequest, LeaveRequestStatus } from './types'
 
 const statusColors: Record<LeaveRequestStatus, string> = {
@@ -10,7 +11,7 @@ const statusColors: Record<LeaveRequestStatus, string> = {
   rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
 }
 
-const dateFmt = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+const dateFmt = formatDateOnly
 
 function CreateForm({ onCreated }: { onCreated: (r: LeaveRequest) => void }) {
   const [startDate, setStartDate] = useState('')

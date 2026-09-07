@@ -4,7 +4,11 @@ import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
 import type { Department, EmployeeRecord, MyEmployeeProfile, Team } from './types'
 
-const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' })
+// dateHired is a date-only value with no meaningful time-of-day, so
+// force UTC display — otherwise a viewer west of UTC sees it shifted
+// back a day (new Date('2026-09-07') is midnight UTC, which is still
+// Sep 6 evening in e.g. US timezones).
+const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' })
 const statusOptions = ['active', 'on_leave', 'terminated'] as const
 
 function MyProfile() {
