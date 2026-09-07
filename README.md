@@ -4,7 +4,7 @@ Internal portal for the BPO team. See [bpo_plan.md](./bpo_plan.md) for the full 
 
 ## Live
 
-- Frontend: https://lerick-ashley-copia.github.io/BPO-Portal/
+- Frontend: https://ashlerick.github.io/BPO-Portal/
 - Backend: https://backend-xi-six-41.vercel.app
 
 ## Stack
