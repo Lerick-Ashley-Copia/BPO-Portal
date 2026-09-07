@@ -9,6 +9,8 @@ import { DocumentsPage } from './pages/documents/DocumentsPage'
 import { HrisPage } from './pages/hris/HrisPage'
 import { LoginPage } from './pages/login/LoginPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
+import { SetPasswordPage } from './pages/set-password/SetPasswordPage'
+import { UsersPage } from './pages/users/UsersPage'
 
 export default function App() {
   return (
@@ -16,6 +18,7 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/set-password" element={<SetPasswordPage />} />
           <Route
             element={
               <RequireAuth>
@@ -29,6 +32,14 @@ export default function App() {
             <Route path="/hris" element={<HrisPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
+            <Route
+              path="/users"
+              element={
+                <RequireAuth roles={['admin']}>
+                  <UsersPage />
+                </RequireAuth>
+              }
+            />
           </Route>
         </Routes>
       </AuthProvider>

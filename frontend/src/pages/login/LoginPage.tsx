@@ -33,7 +33,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-svh items-center justify-center">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 p-6">
-        <h1 className="text-xl font-semibold">JAE Philus Admin Portal</h1>
+        <h1 className="text-xl font-semibold">BPO Portal</h1>
         <div className="space-y-1">
           <label htmlFor="email" className="text-sm text-gray-600">
             Email

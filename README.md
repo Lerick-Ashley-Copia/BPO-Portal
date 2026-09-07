@@ -1,6 +1,6 @@
-# JAE Philus Admin Portal
+# BPO Portal
 
-Internal portal for the BPO team. See [bpo_plan.md](./bpo_plan.md) for the full architecture and phased plan. (Repo and infrastructure are still named `BPO-Portal`/`bpo-portal-*` — see note below.)
+Internal portal for the BPO team. See [bpo_plan.md](./bpo_plan.md) for the full architecture and phased plan. (Working name — will rebrand to "JAE Philus Admin Portal" once approved.)
 
 ## Live
 

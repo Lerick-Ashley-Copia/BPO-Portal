@@ -27,7 +27,7 @@ async function main() {
     await prisma.announcement.createMany({
       data: [
         {
-          title: 'Welcome to the JAE Philus Admin Portal',
+          title: 'Welcome to the BPO Portal',
           content:
             'This is the new home for team announcements, benefits, and reports. More modules are on the way.',
           authorId: admin.id,
@@ -96,7 +96,7 @@ async function main() {
         title: 'Employee Handbook',
         categoryId: policies.id,
         storageKey: 'documents/policies/employee-handbook.txt',
-        body: 'JAE Philus Admin Portal — Employee Handbook (sample)\n\nThis is placeholder content for the employee handbook document.',
+        body: 'BPO Portal — Employee Handbook (sample)\n\nThis is placeholder content for the employee handbook document.',
         accessLevel: 'employee' as const,
       },
       {
