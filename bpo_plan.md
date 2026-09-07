@@ -1,0 +1,1502 @@
+# BPO Team Portal — Development Plan
+
+## 1. Project Overview
+
+Build an internal web portal for the BPO team that provides employees, team leaders, managers, HR, and administrators with a centralized place to access company information, HR resources, reports, documents, and team-related tools.
+
+The system should begin as a focused internal portal and gradually evolve into a broader HRIS/operations platform.
+
+### Initial Modules
+
+* Dashboard
+* Weekly Reports
+* Benefits
+* HRIS / Employee Information
+* Announcements
+* Documents / Policies
+* Team Information
+* User Management
+* Authentication
+* Role-Based Access Control
+* Audit Logs
+
+---
+
+# 2. Technology Stack
+
+## Frontend
+
+**GitHub Pages**
+
+Responsibilities:
+
+* Host the portal frontend
+* Provide the user interface
+* Display dashboards and reports
+* Communicate with the backend API
+* Handle client-side navigation and presentation
+
+The frontend must **not** contain:
+
+* Database credentials
+* AWS credentials
+* Private API keys
+* Service-account credentials
+* Other sensitive secrets
+
+---
+
+## Backend
+
+**Vercel**
+
+Responsibilities:
+
+* API endpoints
+* Authentication/session handling
+* Authorization
+* Business logic
+* Database access
+* Report generation
+* S3 file access
+* Audit logging
+
+The backend is the trusted layer between the frontend and private resources.
+
+---
+
+## Database
+
+**Managed PostgreSQL**
+
+Responsibilities:
+
+* Users
+* Employees
+* Teams
+* Departments
+* Benefits
+* Announcements
+* Weekly reports
+* Attendance
+* Performance data
+* QA data
+* Document metadata
+* Audit logs
+
+Potential PostgreSQL providers:
+
+* Neon
+* Supabase
+* Vercel Marketplace providers
+* Other managed PostgreSQL services
+
+The database provider can be changed later if requirements change.
+
+---
+
+## File/Object Storage
+
+**Amazon S3**
+
+Use S3 for files rather than storing large files directly in PostgreSQL.
+
+Possible files:
+
+* HR documents
+* Policies
+* Benefits documents
+* Employee documents
+* Training materials
+* Generated CSV files
+* Generated XLSX reports
+* Generated PDF reports
+
+S3 buckets should remain private.
+
+Files should only be accessed through authorized backend operations or temporary presigned URLs.
+
+---
+
+# 3. High-Level Architecture
+
+```text
+                         BPO EMPLOYEE
+                              │
+                              ▼
+                     ┌─────────────────┐
+                     │    Browser      │
+                     └────────┬────────┘
+                              │
+                              ▼
+                     ┌─────────────────┐
+                     │  GitHub Pages   │
+                     │    Frontend     │
+                     └────────┬────────┘
+                              │
+                         HTTPS / API
+                              │
+                              ▼
+                     ┌─────────────────┐
+                     │     Vercel      │
+                     │  Backend / API  │
+                     ├─────────────────┤
+                     │ Authentication  │
+                     │ Authorization   │
+                     │ Business Logic  │
+                     │ Reports         │
+                     │ File Access     │
+                     └───────┬─────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+              ▼              ▼              ▼
+       ┌────────────┐ ┌─────────────┐ ┌──────────────┐
+       │ PostgreSQL │ │  Amazon S3  │ │ External     │
+       │  Database  │ │ File Store  │ │ Services     │
+       └────────────┘ └─────────────┘ └──────────────┘
+```
+
+---
+
+# 4. Core Architecture Principle
+
+The frontend should be treated as an **untrusted client**.
+
+```text
+GitHub Pages
+      │
+      │ API request
+      ▼
+Vercel Backend
+      │
+      ├── Authenticate user
+      ├── Check permissions
+      ├── Validate request
+      └── Perform operation
+              │
+              ├── PostgreSQL
+              └── Amazon S3
+```
+
+Never allow the browser to directly access the PostgreSQL database.
+
+Never expose AWS access keys in the frontend.
+
+The frontend controls the user interface.
+
+The backend controls what the user is actually allowed to do.
+
+---
+
+# 5. User Roles
+
+The system should support role-based access control.
+
+## Employee
+
+Can:
+
+* View dashboard
+* View announcements
+* View benefits
+* View authorized documents
+* View personal HRIS information
+* View permitted team information
+* Download authorized files
+* View applicable reports
+
+## Team Leader
+
+Can:
+
+* View assigned team
+* View team members
+* Review team performance
+* Create or submit weekly reports
+* View team attendance where authorized
+* Perform permitted team-management actions
+
+## Manager
+
+Can:
+
+* View multiple teams
+* Review weekly reports
+* View management dashboards
+* Review performance information
+* Perform manager-level actions
+
+## HR
+
+Can:
+
+* Manage employee information
+* Manage benefits
+* Publish HR announcements
+* Manage HR documents
+* Review authorized employee information
+* Manage HR-related content
+
+## Administrator
+
+Can:
+
+* Manage users
+* Manage roles
+* Manage teams
+* Manage departments
+* Manage portal content
+* Manage reports
+* Manage documents
+* Review audit logs
+* Configure system settings
+
+Permissions must be enforced by the backend.
+
+---
+
+# 6. Authentication
+
+Implement authentication before exposing private employee information.
+
+Requirements:
+
+* Login
+* Logout
+* Session management
+* Password reset where applicable
+* Role-based authorization
+* Protected API endpoints
+* Session expiration
+* Secure password handling
+* Optional MFA in a future phase
+
+Authentication should be handled using an established authentication solution rather than implementing password security from scratch.
+
+---
+
+# 7. Dashboard
+
+The dashboard should provide a quick overview of information relevant to the current user.
+
+## Employee Dashboard
+
+Possible widgets:
+
+* Latest announcements
+* Upcoming events
+* Benefits shortcuts
+* Employee profile
+* Team information
+* Latest available reports
+* Important documents
+
+## Team Leader Dashboard
+
+Possible widgets:
+
+* Team headcount
+* Attendance summary
+* Productivity summary
+* QA summary
+* Weekly report status
+* Pending actions
+
+## Manager Dashboard
+
+Possible widgets:
+
+* Total team headcount
+* Attendance summary
+* Performance summary
+* Report status
+* Team comparison
+* Pending approvals
+
+## Admin Dashboard
+
+Possible widgets:
+
+* Total employees
+* Active teams
+* Report status
+* Recent announcements
+* Recent administrative actions
+* System alerts
+
+Dashboard content should depend on the authenticated user's role.
+
+---
+
+# 8. Weekly Reports
+
+Create a reporting module for BPO team reporting.
+
+Possible report information:
+
+* Reporting period
+* Team
+* Client/account
+* Headcount
+* Attendance
+* Productivity
+* Quality / QA
+* SLA
+* Performance metrics
+* Issues
+* Achievements
+* Action items
+* Manager comments
+
+## Report Lifecycle
+
+```text
+Draft
+  │
+  ▼
+Submitted
+  │
+  ▼
+Reviewed
+  │
+  ▼
+Approved
+```
+
+If a report is rejected:
+
+```text
+Rejected
+   │
+   ▼
+Draft
+```
+
+Approved reports should retain their historical state.
+
+Do not silently overwrite previously approved reports.
+
+---
+
+# 9. Report Generation
+
+Reports should be generated by the backend rather than by GitHub Pages.
+
+Example:
+
+```text
+Admin selects:
+
+Team: Team A
+Period: August 10–16
+Report: Weekly Performance
+Format: XLSX
+
+        │
+        ▼
+
+Vercel API
+
+        │
+        ▼
+
+PostgreSQL
+
+        │
+        ▼
+
+Generate report
+
+        │
+        ▼
+
+Amazon S3
+
+        │
+        ▼
+
+Temporary download URL
+```
+
+Supported formats:
+
+* CSV
+* XLSX
+* PDF
+
+For large reports, use asynchronous/background processing rather than keeping a normal API request open for an extended period.
+
+---
+
+# 10. Benefits Module
+
+Create a centralized benefits page.
+
+Possible categories:
+
+* Health benefits
+* Insurance
+* Leave benefits
+* Government benefits
+* Allowances
+* Employee discounts
+* Wellness programs
+* Retirement benefits
+* Frequently asked questions
+
+Each benefit may contain:
+
+```text
+Title
+Category
+Description
+Eligibility
+Requirements
+How to apply
+Contact information
+Documents
+Last updated
+Status
+```
+
+Benefits can optionally be targeted by:
+
+* Employee type
+* Department
+* Team
+* Employment status
+* Other eligibility criteria
+
+---
+
+# 11. HRIS Module
+
+The HRIS section should provide controlled access to employee information.
+
+## Employee Profile
+
+Possible fields:
+
+* Employee ID
+* Name
+* Department
+* Team
+* Position
+* Employment status
+* Date hired
+* Work email
+* Manager
+* Other approved HR information
+
+Sensitive information must only be accessible to authorized roles.
+
+## Future HRIS Features
+
+* Leave management
+* Attendance
+* Employee documents
+* Onboarding
+* Offboarding
+* Employee requests
+* Benefits enrollment
+* Performance history
+* Employee self-service
+
+The HRIS should be expanded gradually instead of attempting to implement every HR function in the initial release.
+
+---
+
+# 12. Announcements
+
+Create an internal announcement system.
+
+Possible features:
+
+* Create announcement
+* Edit announcement
+* Publish/unpublish
+* Schedule publication
+* Target specific teams
+* Target specific roles
+* Archive announcements
+* Expiration date
+
+Example:
+
+```text
+Announcement
+├── ID
+├── Title
+├── Content
+├── Author
+├── Published date
+├── Expiration date
+├── Audience
+└── Status
+```
+
+---
+
+# 13. Documents
+
+Create a centralized document area.
+
+Possible categories:
+
+* HR policies
+* Company policies
+* SOPs
+* Training materials
+* Benefits documents
+* Forms
+* Team documents
+
+Example:
+
+```text
+Documents
+├── General
+├── HR
+├── Operations
+├── Training
+├── Benefits
+└── Management
+```
+
+Documents should have access controls.
+
+Files should be stored in Amazon S3.
+
+PostgreSQL should store the metadata and S3 object reference.
+
+---
+
+# 14. Amazon S3 Storage Architecture
+
+S3 should be used as the persistent file/object storage layer.
+
+Example:
+
+```text
+PostgreSQL
+
+documents
+├── id
+├── title
+├── category
+├── storage_key
+├── uploaded_by
+├── created_at
+└── access_level
+```
+
+The actual file lives in S3:
+
+```text
+S3 Bucket
+│
+├── documents/
+│   ├── policies/
+│   ├── benefits/
+│   ├── training/
+│   └── hr/
+│
+├── employee-documents/
+│
+└── reports/
+    ├── csv/
+    ├── xlsx/
+    └── pdf/
+```
+
+Do not make sensitive buckets publicly readable.
+
+---
+
+# 15. Secure File Access
+
+The preferred flow is:
+
+```text
+Employee
+    │
+    ▼
+GitHub Pages
+    │
+    ▼
+Vercel API
+    │
+    ├── Authenticate
+    ├── Check permissions
+    └── Find S3 object
+            │
+            ▼
+     Generate temporary
+       presigned URL
+            │
+            ▼
+        S3 download
+```
+
+This prevents unauthorized users from simply guessing a file URL.
+
+Examples of protected files:
+
+* Employee contracts
+* HR documents
+* Internal reports
+* Performance reports
+* Sensitive forms
+
+---
+
+# 16. Database Design
+
+Initial PostgreSQL tables may include:
+
+```text
+users
+roles
+permissions
+user_roles
+
+employees
+teams
+departments
+
+announcements
+
+benefits
+benefit_documents
+
+documents
+document_categories
+
+weekly_reports
+weekly_report_items
+
+attendance
+productivity
+qa_scores
+
+audit_logs
+```
+
+The exact schema should be finalized during implementation.
+
+Do not create unnecessary tables before requirements are known.
+
+---
+
+# 17. Database Relationships
+
+The system contains naturally relational data.
+
+Examples:
+
+```text
+Employee
+   │
+   ├── Team
+   ├── Department
+   ├── Attendance
+   ├── Productivity
+   ├── QA Scores
+   └── Documents
+
+Team
+   │
+   └── Weekly Reports
+
+User
+   │
+   └── Roles
+
+Role
+   │
+   └── Permissions
+```
+
+PostgreSQL is preferred because these relationships and reporting requirements are naturally suited to relational databases.
+
+PostgreSQL JSON/JSONB can still be used for flexible data where appropriate.
+
+---
+
+# 18. API Design
+
+The frontend should communicate with the backend through authenticated APIs.
+
+Example endpoints:
+
+```text
+POST   /api/auth/login
+POST   /api/auth/logout
+GET    /api/me
+
+GET    /api/dashboard
+
+GET    /api/announcements
+POST   /api/announcements
+PUT    /api/announcements/:id
+
+GET    /api/benefits
+POST   /api/benefits
+PUT    /api/benefits/:id
+
+GET    /api/employees/:id
+PUT    /api/employees/:id
+
+GET    /api/teams/:id
+
+GET    /api/reports
+POST   /api/reports
+GET    /api/reports/:id
+POST   /api/reports/:id/submit
+POST   /api/reports/:id/approve
+
+GET    /api/documents
+POST   /api/documents
+DELETE /api/documents/:id
+GET    /api/documents/:id/download
+```
+
+All private endpoints must perform authorization checks.
+
+---
+
+# 19. API Request Security
+
+Never trust values supplied by the frontend.
+
+For example, this is unsafe:
+
+```text
+Frontend:
+role = "admin"
+```
+
+The backend should determine the user's role from authenticated identity and trusted database records.
+
+Every sensitive operation should verify:
+
+```text
+Authentication
+      ↓
+Authorization
+      ↓
+Input validation
+      ↓
+Business rules
+      ↓
+Database / S3 operation
+```
+
+---
+
+# 20. Security Requirements
+
+Because this system may contain employee and HR information, security should be considered from the beginning.
+
+Implement:
+
+* HTTPS
+* Secure authentication
+* Role-based authorization
+* Input validation
+* API authorization checks
+* Rate limiting where appropriate
+* Secure HTTP headers
+* Database access restrictions
+* Secret management
+* Audit logging
+* S3 access controls
+* Session expiration
+* Error handling that does not expose secrets
+
+Never commit secrets to Git.
+
+---
+
+# 21. Audit Logs
+
+Important administrative actions should be recorded.
+
+Examples:
+
+```text
+Admin created employee
+Admin changed employee role
+Manager submitted weekly report
+Manager approved weekly report
+HR updated benefit
+Admin uploaded document
+Admin deleted announcement
+Admin changed team assignment
+```
+
+Possible audit record:
+
+```text
+User
+Action
+Resource
+Resource ID
+Timestamp
+Result
+```
+
+Do not unnecessarily store sensitive information in logs.
+
+---
+
+# 22. Deployment
+
+## Frontend
+
+```text
+GitHub Repository
+        │
+        ▼
+GitHub Actions
+        │
+        ▼
+Build
+        │
+        ▼
+GitHub Pages
+```
+
+## Backend
+
+```text
+GitHub Repository
+        │
+        ▼
+Vercel
+        │
+        ▼
+Backend / API
+```
+
+## Database
+
+```text
+Managed PostgreSQL
+```
+
+## File Storage
+
+```text
+Amazon S3
+```
+
+Use separate development and production resources.
+
+---
+
+# 23. Environment Configuration
+
+Development and production must use separate credentials and resources.
+
+Example:
+
+```text
+Development
+├── Development database
+├── Development S3 bucket
+├── Development API keys
+└── Development authentication configuration
+
+Production
+├── Production database
+├── Production S3 bucket
+├── Production API keys
+└── Production authentication configuration
+```
+
+Secrets should be stored in the appropriate backend/deployment secret manager.
+
+Never commit `.env` files containing real secrets.
+
+---
+
+# 24. Frontend Structure
+
+Possible structure:
+
+```text
+src/
+├── components/
+├── layouts/
+├── pages/
+│   ├── dashboard/
+│   ├── reports/
+│   ├── benefits/
+│   ├── hris/
+│   ├── announcements/
+│   └── documents/
+├── services/
+├── hooks/
+├── auth/
+├── utils/
+└── styles/
+```
+
+The exact structure depends on the selected frontend framework.
+
+---
+
+# 25. Backend Structure
+
+Possible structure:
+
+```text
+api/
+├── auth/
+├── users/
+├── employees/
+├── teams/
+├── reports/
+├── benefits/
+├── announcements/
+├── documents/
+└── admin/
+```
+
+Separate:
+
+```text
+Routes
+   ↓
+Authentication
+   ↓
+Authorization
+   ↓
+Validation
+   ↓
+Business Logic
+   ↓
+Database / S3
+```
+
+Avoid putting all business logic directly inside API route handlers.
+
+---
+
+# 26. Development Phases
+
+## Phase 1 — Foundation
+
+* [ ] Create GitHub repositories
+* [ ] Create frontend project
+* [ ] Create backend project
+* [ ] Configure Vercel
+* [ ] Configure GitHub Pages
+* [ ] Create PostgreSQL database
+* [ ] Create S3 bucket
+* [ ] Configure environment variables
+* [ ] Establish development and production environments
+
+---
+
+## Phase 2 — Authentication
+
+* [ ] Implement login
+* [ ] Implement logout
+* [ ] Implement sessions
+* [ ] Implement roles
+* [ ] Implement permissions
+* [ ] Protect API endpoints
+* [ ] Create initial admin access
+* [ ] Test unauthorized access
+
+---
+
+## Phase 3 — Core Portal
+
+* [ ] Build dashboard
+* [ ] Build announcements
+* [ ] Build benefits
+* [ ] Build documents
+* [ ] Build navigation
+* [ ] Implement responsive design
+* [ ] Implement loading/error states
+
+---
+
+## Phase 4 — HRIS
+
+* [ ] Employee profiles
+* [ ] Team assignments
+* [ ] Department information
+* [ ] Employee status
+* [ ] HR permissions
+* [ ] Employee self-service
+* [ ] Employee document access
+
+---
+
+## Phase 5 — Reports
+
+* [ ] Weekly report database structure
+* [ ] Report creation
+* [ ] Report submission
+* [ ] Report review
+* [ ] Report approval
+* [ ] Report history
+* [ ] CSV export
+* [ ] XLSX export
+* [ ] PDF export
+* [ ] Store generated reports in S3
+
+---
+
+## Phase 6 — Administration
+
+* [ ] User management
+* [ ] Employee management
+* [ ] Team management
+* [ ] Department management
+* [ ] Content management
+* [ ] Document management
+* [ ] Audit logs
+* [ ] Administrative dashboard
+
+---
+
+## Phase 7 — Security & Testing
+
+* [ ] Permission testing
+* [ ] API security testing
+* [ ] Input validation
+* [ ] Authentication testing
+* [ ] S3 access testing
+* [ ] Database backup strategy
+* [ ] Error handling
+* [ ] Performance testing
+* [ ] File upload testing
+* [ ] Report-generation testing
+
+---
+
+## Phase 8 — Production
+
+* [ ] Production database
+* [ ] Production S3 bucket
+* [ ] Production environment variables
+* [ ] Custom domain
+* [ ] HTTPS
+* [ ] Monitoring
+* [ ] Logging
+* [ ] Database backup verification
+* [ ] S3 backup/versioning strategy
+* [ ] Deployment documentation
+* [ ] User acceptance testing
+* [ ] Production launch
+
+---
+
+# 27. MVP Scope
+
+Do not attempt to build the entire HRIS in the first release.
+
+The first production-ready version should contain:
+
+```text
+MVP
+│
+├── Authentication
+├── Dashboard
+├── Announcements
+├── Benefits
+├── Employee Profile
+├── Team Information
+├── Weekly Reports
+├── Basic Report Export
+├── Documents
+└── Admin Management
+```
+
+This gives the team a useful portal while keeping the first release manageable.
+
+---
+
+# 28. Future Features
+
+Potential future additions:
+
+* [ ] Leave request system
+* [ ] Attendance management
+* [ ] Employee self-service
+* [ ] Payslip integration
+* [ ] Performance dashboards
+* [ ] QA management
+* [ ] Training management
+* [ ] Ticket/request system
+* [ ] Internal messaging
+* [ ] Calendar
+* [ ] Notifications
+* [ ] Email notifications
+* [ ] Mobile-friendly/PWA support
+* [ ] MFA
+* [ ] Advanced analytics
+* [ ] Automated scheduled reports
+* [ ] Client-specific dashboards
+* [ ] Workforce planning
+* [ ] Onboarding workflows
+* [ ] Offboarding workflows
+
+---
+
+# 29. Cost Strategy
+
+The initial goal is to keep infrastructure costs low while maintaining a production-capable architecture.
+
+Initial services:
+
+```text
+Frontend
+└── GitHub Pages
+
+Backend
+└── Vercel
+
+Database
+└── Managed PostgreSQL
+
+File Storage
+└── Amazon S3
+```
+
+Use free tiers where appropriate during development.
+
+Monitor usage before moving to paid tiers.
+
+Do not assume free tiers are unlimited.
+
+Set up billing/usage alerts for cloud services, especially AWS.
+
+---
+
+# 30. Backup Strategy
+
+Database backups should be configured according to the capabilities of the selected PostgreSQL provider.
+
+S3 should use appropriate protection mechanisms where needed, such as:
+
+* Versioning
+* Lifecycle policies
+* Access controls
+* Backup strategy
+* Recovery procedures
+
+Important data should not rely on a single copy.
+
+---
+
+# 31. Data Retention
+
+Define retention requirements before implementing HRIS functionality.
+
+Consider separate retention policies for:
+
+* Employee records
+* Attendance
+* Performance records
+* Weekly reports
+* HR documents
+* Audit logs
+* Generated reports
+
+Do not retain sensitive information indefinitely without a business requirement.
+
+---
+
+# 32. Reporting Architecture
+
+As the amount of BPO data grows, reports should not repeatedly perform expensive calculations against millions of raw records.
+
+Possible progression:
+
+```text
+Stage 1
+PostgreSQL
+    ↓
+Simple SQL queries
+    ↓
+Reports
+
+Stage 2
+PostgreSQL
+    ↓
+Indexes + optimized queries
+    ↓
+Reports
+
+Stage 3
+PostgreSQL
+    ↓
+Views / materialized views
+    ↓
+Reporting queries
+
+Stage 4
+PostgreSQL
+    ↓
+Aggregated reporting data
+    ↓
+Dashboards + scheduled reports
+```
+
+Start simple and optimize based on actual usage.
+
+---
+
+# 33. File Management Rules
+
+Use PostgreSQL for metadata.
+
+Use S3 for actual files.
+
+Example:
+
+```text
+PostgreSQL
+
+documents
+├── id
+├── title
+├── category
+├── storage_key
+├── uploaded_by
+├── created_at
+└── access_level
+```
+
+S3:
+
+```text
+bpo-portal-production/
+│
+├── documents/
+│   ├── policies/
+│   ├── benefits/
+│   ├── training/
+│   └── operations/
+│
+├── employee-documents/
+│
+└── reports/
+    ├── csv/
+    ├── xlsx/
+    └── pdf/
+```
+
+Do not put private HR documents into the GitHub repository.
+
+---
+
+# 34. Recommended File Download Flow
+
+```text
+User clicks "Download"
+        │
+        ▼
+Frontend requests:
+GET /api/documents/:id/download
+        │
+        ▼
+Vercel API
+        │
+        ├── Authenticate user
+        │
+        ├── Check permission
+        │
+        ├── Find S3 object
+        │
+        └── Generate temporary URL
+                    │
+                    ▼
+                  S3
+                    │
+                    ▼
+               File download
+```
+
+The temporary URL should expire after an appropriate period.
+
+---
+
+# 35. Recommended Development Repository Structure
+
+A possible organization:
+
+```text
+bpo-portal/
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+├── backend/
+│   ├── api/
+│   ├── services/
+│   ├── database/
+│   └── package.json
+│
+├── database/
+│   ├── migrations/
+│   └── seeds/
+│
+├── docs/
+│   ├── architecture/
+│   ├── api/
+│   └── security/
+│
+├── PLAN.md
+├── README.md
+└── .gitignore
+```
+
+This is only a starting structure and can be adjusted depending on the chosen frameworks.
+
+---
+
+# 36. Development Rules
+
+## Rule 1 — Backend First for Sensitive Operations
+
+Anything involving private information should go through the backend.
+
+## Rule 2 — Never Trust the Frontend
+
+Frontend restrictions are for usability.
+
+Backend restrictions are for security.
+
+## Rule 3 — Keep Secrets Out of Git
+
+Never commit:
+
+```text
+.env
+AWS credentials
+Database passwords
+Private API keys
+Authentication secrets
+```
+
+## Rule 4 — Keep Files Out of the Database
+
+Store file metadata in PostgreSQL.
+
+Store actual files in S3.
+
+## Rule 5 — Keep Production Separate
+
+Do not use the production database during development.
+
+## Rule 6 — Build Modules Independently
+
+Each major module should be independently maintainable.
+
+---
+
+# 37. Success Criteria
+
+The portal should:
+
+* Provide one central location for BPO team information.
+* Allow employees to access relevant information easily.
+* Allow managers to manage authorized team information.
+* Allow HR to manage HR-related content.
+* Generate useful weekly reports.
+* Protect sensitive HR information.
+* Maintain an audit trail for important administrative actions.
+* Support private document storage.
+* Work on desktop and mobile devices.
+* Remain inexpensive during the initial stage.
+* Scale as the BPO grows.
+* Avoid requiring a complete rewrite when new HRIS features are added.
+
+---
+
+# 38. Final Target Architecture
+
+```text
+                           BPO PORTAL
+                               │
+                               ▼
+                     ┌──────────────────┐
+                     │   GitHub Pages   │
+                     │    Frontend      │
+                     └────────┬─────────┘
+                              │
+                              │ HTTPS
+                              ▼
+                     ┌──────────────────┐
+                     │      Vercel      │
+                     │   Backend / API  │
+                     ├──────────────────┤
+                     │ Authentication   │
+                     │ Authorization    │
+                     │ Business Logic   │
+                     │ Reports          │
+                     │ File Access      │
+                     └───────┬──────────┘
+                             │
+                ┌────────────┴────────────┐
+                │                         │
+                ▼                         ▼
+       ┌─────────────────┐      ┌──────────────────┐
+       │   PostgreSQL    │      │    Amazon S3     │
+       │                 │      │                  │
+       │ Employees       │      │ HR Documents     │
+       │ Teams           │      │ Policies         │
+       │ Benefits        │      │ Benefits Files   │
+       │ Reports         │      │ Employee Files   │
+       │ Attendance      │      │ Report Exports   │
+       │ Performance     │      │ Training Files   │
+       │ Audit Logs      │      │                  │
+       └─────────────────┘      └──────────────────┘
+```
+
+---
+
+# 39. Guiding Principle
+
+Build the portal **modularly and incrementally**.
+
+Do not attempt to build a complete enterprise HRIS before the actual requirements are known.
+
+Start with:
+
+```text
+BPO Portal
+│
+├── Information
+│   ├── Announcements
+│   ├── Benefits
+│   └── Documents
+│
+├── People
+│   ├── Employees
+│   ├── Teams
+│   └── HRIS
+│
+└── Operations
+    ├── Weekly Reports
+    ├── Performance
+    └── Analytics
+```
+
+Then add functionality based on actual operational requirements.
+
+The initial architecture of:
+
+**GitHub Pages + Vercel + PostgreSQL + Amazon S3**
+
+provides a simple, relatively low-cost foundation that can grow into a larger internal BPO platform without requiring the core architecture to be replaced.

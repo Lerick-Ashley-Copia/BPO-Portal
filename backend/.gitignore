@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel
+
+# Prisma
+prisma/generated
+
+# Build output
+dist
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
