@@ -1220,38 +1220,39 @@ after.
 
 ---
 
-## Phase 11 — Leave & Attendance
+## Phase 11 — Leave & Attendance ✅ (built)
 
-Extends the HRIS module (Phase 4) with two closely-related employee-facing workflows. Benefits
-from Phase 10's notification system for approval flows.
+Extends the HRIS module (Phase 4) with two closely-related employee-facing workflows.
 
-* [ ] Leave request system
-  * Employee profile (Phase 4) tracks a paid-leave balance — **SIL (Service Incentive Leave)**,
-    the Philippine standard of 5 days/year for employees with 1+ year of service. Starting balance
-    and whether it's prorated/accrued over time: still open, decide at build time.
-  * Employee submits a leave request (dates + reason) from the app.
-  * HR is notified when a new request comes in — likely via the email infrastructure already
-    built for account setup (Phase 6), rather than a new in-app notification system, unless
-    Phase 10 (Notifications) has landed by then.
-  * HR/Admin can see pending requests and approve or reject them (same review pattern as Weekly
-    Reports' lifecycle in Phase 5).
-  * On approval, deduct from the employee's SIL balance. **Open question, decide at build time**:
-    deduct the actual number of days requested (e.g. a 3-day approved leave costs 3), or a flat 1
-    per approved request regardless of duration? The former matches how paid leave normally works;
-    confirm which one is actually wanted before building the schema/logic around it.
-* [ ] Attendance management
-  * Daily check-in/check-out. On the Dashboard, show a "Check In" prompt if the employee hasn't
-    checked in yet today (needs a per-employee, per-day attendance record — checkInAt, checkOutAt
-    nullable until checkout; timezone handling for where "today" starts/ends still open).
-  * A "Check Out" button next to the header's existing "Log out" button, available once checked in
-    and not yet checked out for the day.
-  * **Open question, decide at build time**: is Check Out independent of Log out (you can check
-    out and keep using the app, then log out separately later), or does clicking Check Out also
-    log the user out in the same action? The user's phrasing ("checkout button next to logout;
-    which with checkout + logout") wasn't fully clear on this — confirm before building.
-  * This is presumably the actual attendance data source for the Weekly Reports "Attendance"
-    field (currently free text — Phase 5) and for Manager/HR "View team attendance" (section 5)
-    once built.
+* [x] Leave request system
+  * Employee profile tracks a paid-leave balance — **SIL (Service Incentive Leave)** —
+    `silBalance`, starting at 5 days, shown on the HRIS profile page.
+  * Employee submits a leave request (start/end date + optional reason) from `/leave`; days
+    requested = inclusive day count between start and end.
+  * HR/Admin are emailed when a new request comes in (reuses the Gmail OAuth infra from Phase 6).
+  * HR/Admin see all pending requests and Approve/Reject (with an optional comment on reject) from
+    the same page — non-HR/Admin only see their own requests.
+  * On approval, `silBalance` is decremented by the **actual number of days requested**, inside a
+    DB transaction with the status update so the two can't drift apart.
+* [x] Attendance management
+  * Check-in is **automatic on login** — no button to click or forget. The first time a session
+    learns today has no attendance record yet, it silently checks the employee in, then shows a
+    dismissible green confirmation banner on the Dashboard ("You were checked in at 9:02 AM"). If
+    the automatic attempt fails (dropped request, transient error), an amber banner with a
+    **Retry Check In** button appears instead of failing silently.
+  * A **Check Out** button sits next to the header's Log out button once checked in and not yet
+    checked out for the day. Clicking it asks for confirmation ("Check out for today? You won't be
+    able to undo this.") before calling the API, specifically to guard against misclicks — resolved
+    as a real design concern once check-in stopped being a manual action. Check Out is independent
+    of Log out (confirmed): checking out doesn't log you out, and logging out doesn't check you out.
+  * "Today" is always Manila's calendar day (fixed UTC+8 offset math, both backend and frontend),
+    not the server's or viewer's local day — a `[employeeId, date]` unique constraint keeps one
+    record per employee per Manila day.
+  * `/attendance` shows a date-range filter (From/To date pickers, same date twice for a single
+    day, defaulting to today) — HR/Admin see all employees, everyone else sees their own history
+    only. An **Export to Excel** button exports the current range; multi-day exports are grouped
+    into one section per date (bold date header + Employee/Check In/Check Out rows per section)
+    rather than a flat table.
 
 ---
 
