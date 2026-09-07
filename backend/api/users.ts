@@ -137,7 +137,7 @@ async function handleCreate(req: AuthedRequest, res: VercelResponse) {
      <p>If you weren't expecting this, you can ignore this email.</p>`,
   )
 
-  logAudit(req.auth.sub, 'create', 'user', user.id)
+  await logAudit(req.auth.sub, 'create', 'user', user.id)
   res.status(201).json(serialize(user))
 }
 
@@ -173,9 +173,11 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
 
   // Logged as separate audit entries per kind of change, matching the
   // rest of the app's convention of one action per thing that happened
-  // rather than a single catch-all "update".
-  if (roles !== undefined) logAudit(req.auth.sub, 'update_roles', 'user', id)
-  if (nameChanged) logAudit(req.auth.sub, 'update_name', 'user', id)
+  // rather than a single catch-all "update". Awaited (unlike most
+  // logAudit call sites) so the write is guaranteed to land before the
+  // response returns, rather than racing the function's teardown.
+  if (roles !== undefined) await logAudit(req.auth.sub, 'update_roles', 'user', id)
+  if (nameChanged) await logAudit(req.auth.sub, 'update_name', 'user', id)
 
   res.status(200).json(serialize(user))
 }
