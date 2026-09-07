@@ -53,6 +53,8 @@ function CheckOutButton() {
   const [checkingOut, setCheckingOut] = useState(false)
 
   async function handleCheckOut() {
+    if (!window.confirm("Check out for today? You won't be able to undo this.")) return
+
     setCheckingOut(true)
     try {
       await api.post('/leave/attendance/checkout')

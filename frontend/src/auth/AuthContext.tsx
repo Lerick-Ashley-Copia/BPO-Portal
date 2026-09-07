@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { api, ApiError } from '../services/api'
 import type { AuthUser, Role } from './types'
 
@@ -10,6 +10,8 @@ interface PendingAction {
 export interface AttendanceStatus {
   checkedIn: boolean
   checkedOut: boolean
+  checkInAt: string | null
+  checkOutAt: string | null
 }
 
 interface AuthContextValue {
@@ -24,6 +26,8 @@ interface AuthContextValue {
   guardedAction: (requiredRoles: Role[], run: () => void) => void
   attendanceStatus: AttendanceStatus | null
   refreshAttendance: () => void
+  justCheckedIn: boolean
+  dismissJustCheckedIn: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -42,6 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [viewAsRole, setViewAsRole] = useState<Role | null>(null)
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus | null>(null)
+  const [justCheckedIn, setJustCheckedIn] = useState(false)
+  const autoCheckInTried = useRef(false)
 
   function refreshAttendance() {
     api
@@ -50,11 +56,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => setAttendanceStatus(null))
   }
 
+  function dismissJustCheckedIn() {
+    setJustCheckedIn(false)
+  }
+
   useEffect(() => {
-    if (user) refreshAttendance()
-    else setAttendanceStatus(null)
+    if (user) {
+      autoCheckInTried.current = false
+      refreshAttendance()
+    } else {
+      setAttendanceStatus(null)
+      setJustCheckedIn(false)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
+
+  // Login itself is the check-in trigger — no separate "Check In"
+  // button to click or forget. Fires once per session, the first time
+  // we learn today has no record yet.
+  useEffect(() => {
+    if (!user || !attendanceStatus || attendanceStatus.checkedIn || autoCheckInTried.current) return
+    autoCheckInTried.current = true
+    api
+      .post<AttendanceStatus>('/leave/attendance/checkin')
+      .then((status) => {
+        setAttendanceStatus(status)
+        setJustCheckedIn(true)
+      })
+      .catch(() => {
+        // e.g. no employee profile on file yet — nothing to surface here
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, attendanceStatus])
 
   useEffect(() => {
     const token = localStorage.getItem('bpo_token')
@@ -126,6 +159,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         guardedAction,
         attendanceStatus,
         refreshAttendance,
+        justCheckedIn,
+        dismissJustCheckedIn,
       }}
     >
       {children}
