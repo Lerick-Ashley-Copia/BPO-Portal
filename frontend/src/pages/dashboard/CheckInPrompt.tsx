@@ -1,31 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useAuth } from '../../auth/AuthContext'
 import { api, ApiError } from '../../services/api'
 
-interface AttendanceStatus {
-  checkedIn: boolean
-  checkedOut: boolean
-  checkInAt: string | null
-}
-
 export function CheckInPrompt() {
-  const [status, setStatus] = useState<AttendanceStatus | null>(null)
+  const { attendanceStatus, refreshAttendance } = useAuth()
   const [checkingIn, setCheckingIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [hidden, setHidden] = useState(false)
-
-  useEffect(() => {
-    api
-      .get<AttendanceStatus>('/leave/attendance/today')
-      .then(setStatus)
-      .catch(() => setHidden(true)) // no employee profile yet — nothing to show
-  }, [])
 
   async function handleCheckIn() {
     setCheckingIn(true)
     setError(null)
     try {
-      const updated = await api.post<AttendanceStatus>('/leave/attendance/checkin')
-      setStatus(updated)
+      await api.post('/leave/attendance/checkin')
+      refreshAttendance()
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not check in')
     } finally {
@@ -33,7 +20,7 @@ export function CheckInPrompt() {
     }
   }
 
-  if (hidden || !status || status.checkedIn) return null
+  if (!attendanceStatus || attendanceStatus.checkedIn) return null
 
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-900 dark:bg-blue-950">

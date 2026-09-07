@@ -7,6 +7,11 @@ interface PendingAction {
   run: () => void
 }
 
+export interface AttendanceStatus {
+  checkedIn: boolean
+  checkedOut: boolean
+}
+
 interface AuthContextValue {
   user: AuthUser | null
   loading: boolean
@@ -17,6 +22,8 @@ interface AuthContextValue {
   setViewAsRole: (role: Role | null) => void
   effectiveRoles: Role[]
   guardedAction: (requiredRoles: Role[], run: () => void) => void
+  attendanceStatus: AttendanceStatus | null
+  refreshAttendance: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -34,6 +41,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [viewAsRole, setViewAsRole] = useState<Role | null>(null)
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
+  const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus | null>(null)
+
+  function refreshAttendance() {
+    api
+      .get<AttendanceStatus>('/leave/attendance/today')
+      .then(setAttendanceStatus)
+      .catch(() => setAttendanceStatus(null))
+  }
+
+  useEffect(() => {
+    if (user) refreshAttendance()
+    else setAttendanceStatus(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   useEffect(() => {
     const token = localStorage.getItem('bpo_token')
@@ -93,7 +114,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, setSession, viewAsRole, setViewAsRole, effectiveRoles, guardedAction }}
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        setSession,
+        viewAsRole,
+        setViewAsRole,
+        effectiveRoles,
+        guardedAction,
+        attendanceStatus,
+        refreshAttendance,
+      }}
     >
       {children}
 

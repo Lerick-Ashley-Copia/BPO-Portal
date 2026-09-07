@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import type { Role } from '../auth/types'
@@ -48,21 +48,14 @@ function RoleSwitcher() {
 }
 
 function CheckOutButton() {
-  const [visible, setVisible] = useState(false)
+  const { attendanceStatus, refreshAttendance } = useAuth()
   const [checkingOut, setCheckingOut] = useState(false)
-
-  useEffect(() => {
-    api
-      .get<{ checkedIn: boolean; checkedOut: boolean }>('/leave/attendance/today')
-      .then((status) => setVisible(status.checkedIn && !status.checkedOut))
-      .catch(() => setVisible(false))
-  }, [])
 
   async function handleCheckOut() {
     setCheckingOut(true)
     try {
       await api.post('/leave/attendance/checkout')
-      setVisible(false)
+      refreshAttendance()
     } catch (err) {
       if (err instanceof ApiError) alert(err.message)
     } finally {
@@ -70,7 +63,7 @@ function CheckOutButton() {
     }
   }
 
-  if (!visible) return null
+  if (!attendanceStatus?.checkedIn || attendanceStatus.checkedOut) return null
 
   return (
     <button
