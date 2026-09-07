@@ -7,6 +7,7 @@ export interface MyEmployeeProfile {
   position: string | null
   status: string
   dateHired: string | null
+  silBalance: number
 }
 
 export interface EmployeeRecord {

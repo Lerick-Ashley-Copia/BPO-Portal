@@ -8,6 +8,7 @@ import { BenefitsPage } from './pages/benefits/BenefitsPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { DocumentsPage } from './pages/documents/DocumentsPage'
 import { HrisPage } from './pages/hris/HrisPage'
+import { LeaveRequestsPage } from './pages/leave/LeaveRequestsPage'
 import { LoginPage } from './pages/login/LoginPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
 import { SetPasswordPage } from './pages/set-password/SetPasswordPage'
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/hris" element={<HrisPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
+            <Route path="/leave" element={<LeaveRequestsPage />} />
             <Route
               path="/users"
               element={

@@ -14,6 +14,11 @@
     { "source": "/api/announcements/:id", "destination": "/api/announcements?sub=:id" },
     { "source": "/api/benefits/:id", "destination": "/api/benefits?sub=:id" },
     { "source": "/api/reports/:id/export", "destination": "/api/reports?sub=:id" },
-    { "source": "/api/reports/:id", "destination": "/api/reports?sub=:id" }
+    { "source": "/api/reports/:id", "destination": "/api/reports?sub=:id" },
+    { "source": "/api/leave/requests", "destination": "/api/leave?resource=requests" },
+    { "source": "/api/leave/requests/:id", "destination": "/api/leave?resource=requests&sub=:id" },
+    { "source": "/api/leave/attendance/today", "destination": "/api/leave?resource=attendance&sub=today" },
+    { "source": "/api/leave/attendance/checkin", "destination": "/api/leave?resource=attendance&sub=checkin" },
+    { "source": "/api/leave/attendance/checkout", "destination": "/api/leave?resource=attendance&sub=checkout" }
   ]
 }

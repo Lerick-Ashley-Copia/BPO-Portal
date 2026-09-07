@@ -31,6 +31,7 @@ function serialize(e: {
   position: string | null
   status: string
   dateHired: Date | null
+  silBalance: number
 }) {
   return {
     id: e.id,
@@ -43,6 +44,7 @@ function serialize(e: {
     position: e.position,
     status: e.status,
     dateHired: e.dateHired,
+    silBalance: e.silBalance,
   }
 }
 

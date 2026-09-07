@@ -74,8 +74,48 @@ model Employee {
   status     String    @default("active")
   dateHired  DateTime?
   managerId  String?
+  silBalance Int       @default(5)
+
+  leaveRequests     LeaveRequest[]
+  attendanceRecords AttendanceRecord[]
 
   @@map("employees")
+}
+
+enum LeaveRequestStatus {
+  pending
+  approved
+  rejected
+}
+
+model LeaveRequest {
+  id            String             @id @default(uuid())
+  employee      Employee           @relation(fields: [employeeId], references: [id])
+  employeeId    String
+  startDate     DateTime
+  endDate       DateTime
+  days          Int
+  reason        String?
+  status        LeaveRequestStatus @default(pending)
+  reviewedBy    String?
+  reviewComment String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@map("leave_requests")
+}
+
+model AttendanceRecord {
+  id         String    @id @default(uuid())
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  employeeId String
+  date       DateTime  // the calendar day this record is for, normalized to midnight Asia/Manila
+  checkInAt  DateTime
+  checkOutAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([employeeId, date])
+  @@map("attendance_records")
 }
 
 model Announcement {

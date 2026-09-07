@@ -4,6 +4,7 @@ import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { useApiData } from '../../hooks/useApiData'
 import type { Announcement } from '../announcements/types'
 import { AdminWidgets } from './AdminWidgets'
+import { CheckInPrompt } from './CheckInPrompt'
 
 const roleLabels: Record<string, string> = {
   employee: 'Employee',
@@ -18,6 +19,7 @@ const quickLinks = [
   { to: '/benefits', label: 'Benefits' },
   { to: '/hris', label: 'HRIS' },
   { to: '/reports', label: 'Weekly Reports' },
+  { to: '/leave', label: 'Leave Requests' },
   { to: '/documents', label: 'Documents' },
 ]
 
@@ -38,6 +40,10 @@ export function DashboardPage() {
       )}
 
       {user?.roles.includes('admin') && <AdminWidgets />}
+
+      <div className="mt-6">
+        <CheckInPrompt />
+      </div>
 
       <div className="mt-6 grid gap-6 md:grid-cols-3">
         <section className="md:col-span-2">

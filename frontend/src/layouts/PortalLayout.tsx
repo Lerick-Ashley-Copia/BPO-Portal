@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import type { Role } from '../auth/types'
+import { api, ApiError } from '../services/api'
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
@@ -8,6 +10,7 @@ const navItems = [
   { to: '/benefits', label: 'Benefits' },
   { to: '/hris', label: 'HRIS' },
   { to: '/reports', label: 'Weekly Reports', roles: ['team_leader', 'manager', 'hr', 'admin'] as const },
+  { to: '/leave', label: 'Leave Requests' },
   { to: '/documents', label: 'Documents' },
   { to: '/users', label: 'Users', roles: ['admin'] as const },
   { to: '/audit-logs', label: 'Audit Logs', roles: ['admin'] as const },
@@ -44,6 +47,42 @@ function RoleSwitcher() {
   )
 }
 
+function CheckOutButton() {
+  const [visible, setVisible] = useState(false)
+  const [checkingOut, setCheckingOut] = useState(false)
+
+  useEffect(() => {
+    api
+      .get<{ checkedIn: boolean; checkedOut: boolean }>('/leave/attendance/today')
+      .then((status) => setVisible(status.checkedIn && !status.checkedOut))
+      .catch(() => setVisible(false))
+  }, [])
+
+  async function handleCheckOut() {
+    setCheckingOut(true)
+    try {
+      await api.post('/leave/attendance/checkout')
+      setVisible(false)
+    } catch (err) {
+      if (err instanceof ApiError) alert(err.message)
+    } finally {
+      setCheckingOut(false)
+    }
+  }
+
+  if (!visible) return null
+
+  return (
+    <button
+      onClick={handleCheckOut}
+      disabled={checkingOut}
+      className="shrink-0 rounded border border-gray-300 px-3 py-1 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+    >
+      {checkingOut ? 'Checking out…' : 'Check Out'}
+    </button>
+  )
+}
+
 export function PortalLayout() {
   const { user, logout, effectiveRoles } = useAuth()
   const visibleNavItems = navItems.filter(
@@ -58,6 +97,7 @@ export function PortalLayout() {
           <div className="flex shrink-0 flex-wrap items-center gap-3 text-sm sm:gap-4">
             <RoleSwitcher />
             <span className="max-w-[40vw] truncate text-gray-500 sm:max-w-none">{user?.email}</span>
+            <CheckOutButton />
             <button
               onClick={logout}
               className="shrink-0 rounded border border-gray-300 px-3 py-1 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"

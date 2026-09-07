@@ -41,6 +41,7 @@ function MyProfile() {
     ['Status', profile.status],
     ['Date Hired', profile.dateHired ? dateFormatter.format(new Date(profile.dateHired)) : '—'],
     ['Work Email', profile.email],
+    ['SIL Balance', `${profile.silBalance} day${profile.silBalance === 1 ? '' : 's'}`],
   ]
 
   return (
