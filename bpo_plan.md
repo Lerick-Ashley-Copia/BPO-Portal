@@ -1056,6 +1056,10 @@ Avoid putting all business logic directly inside API route handlers.
 ## Phase 6 — Administration
 
 * [ ] User management
+  * Admin creates an account by entering the new user's email; the system
+    generates a password and emails it to that address (admin does not
+    set or see the password). Requires an email-sending service to be
+    provisioned (e.g. Resend) — not yet set up.
 * [ ] Employee management
 * [ ] Team management
 * [ ] Department management

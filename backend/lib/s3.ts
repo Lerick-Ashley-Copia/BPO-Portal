@@ -46,3 +46,9 @@ export function getUploadUrl(
 export function deleteObject(key: string) {
   return s3.send(new DeleteObjectCommand({ Bucket: BUCKET(), Key: key }))
 }
+
+export function putObject(key: string, body: string | Buffer, contentType: string) {
+  return s3.send(
+    new PutObjectCommand({ Bucket: BUCKET(), Key: key, Body: body, ContentType: contentType }),
+  )
+}

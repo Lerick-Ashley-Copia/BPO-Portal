@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { hashPassword } from '../lib/auth.js'
+import { putObject } from '../lib/s3.js'
 
 const prisma = new PrismaClient()
 
@@ -26,7 +27,7 @@ async function main() {
     await prisma.announcement.createMany({
       data: [
         {
-          title: 'Welcome to the BPO Portal',
+          title: 'Welcome to the JAE Philus Admin Portal',
           content:
             'This is the new home for team announcements, benefits, and reports. More modules are on the way.',
           authorId: admin.id,
@@ -82,6 +83,52 @@ async function main() {
       ],
     })
     console.log('Seeded sample benefits')
+  }
+
+  if ((await prisma.documentCategory.count()) === 0) {
+    const [policies, forms] = await Promise.all([
+      prisma.documentCategory.create({ data: { name: 'Policies' } }),
+      prisma.documentCategory.create({ data: { name: 'Forms' } }),
+    ])
+
+    const sampleDocs = [
+      {
+        title: 'Employee Handbook',
+        categoryId: policies.id,
+        storageKey: 'documents/policies/employee-handbook.txt',
+        body: 'JAE Philus Admin Portal — Employee Handbook (sample)\n\nThis is placeholder content for the employee handbook document.',
+        accessLevel: 'employee' as const,
+      },
+      {
+        title: 'Leave Request Form',
+        categoryId: forms.id,
+        storageKey: 'documents/forms/leave-request-form.txt',
+        body: 'Leave Request Form (sample)\n\nEmployee Name: ____________\nDates Requested: ____________\nReason: ____________',
+        accessLevel: 'employee' as const,
+      },
+      {
+        title: 'HR Compensation Guidelines',
+        categoryId: policies.id,
+        storageKey: 'documents/policies/hr-compensation-guidelines.txt',
+        body: 'HR Compensation Guidelines (sample, HR/Admin only)\n\nThis is placeholder content restricted to HR and Admin roles.',
+        accessLevel: 'hr' as const,
+      },
+    ]
+
+    for (const doc of sampleDocs) {
+      await putObject(doc.storageKey, doc.body, 'text/plain')
+    }
+
+    await prisma.document.createMany({
+      data: sampleDocs.map((doc) => ({
+        title: doc.title,
+        categoryId: doc.categoryId,
+        storageKey: doc.storageKey,
+        accessLevel: doc.accessLevel,
+        uploadedBy: admin.id,
+      })),
+    })
+    console.log('Seeded sample documents (uploaded to S3/B2)')
   }
 }
 
