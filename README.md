@@ -2,6 +2,8 @@
 
 Internal portal for the BPO team. See [bpo_plan.md](./bpo_plan.md) for the full architecture and phased plan. (Working name — will rebrand to "JAE Philus Admin Portal" once approved.)
 
+Transferring this project to a client or new owner? See [HANDOFF.md](./HANDOFF.md).
+
 ## Live
 
 - Frontend: https://ashlerick.github.io/BPO-Portal/
