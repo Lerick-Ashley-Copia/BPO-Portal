@@ -1065,12 +1065,16 @@ Avoid putting all business logic directly inside API route handlers.
   can also reassign any user's roles from the same page.
 * [x] Employee management — covered in Phase 4 (HR/Admin can edit position, status, team,
   department for any employee)
-* [ ] Team management — teams can be assigned to employees (Phase 4) but not created/edited/deleted yet
-* [ ] Department management — same as above; only seeded departments exist so far
-* [ ] Content management — create/edit UI for Announcements and Benefits (currently read-only)
-* [ ] Document management — upload UI (download already works via Phase 3's presigned URLs)
-* [ ] Audit logs
-* [ ] Administrative dashboard
+* [x] Team management — Admin can create teams (name + department); renaming/deleting not built yet
+* [x] Department management — Admin can create departments; renaming/deleting not built yet
+* [x] Content management — HR/Admin can create, edit, and delete Announcements and Benefits
+* [x] Document management — HR/Admin can upload documents (base64 through the backend, capped at
+  4MB — fine for policy docs/forms, would need a presigned direct-to-S3 upload for larger files)
+* [x] Audit logs — every mutating action (user/employee/announcement/benefit/team/department/
+  document changes) is recorded with actor, action, resource, and result; viewable at `/audit-logs`
+* [x] Administrative dashboard — employee/team counts and recent administrative actions on the
+  main Dashboard for Admin users, per section 7's Admin Dashboard widget list (Report status and
+  System alerts are not included — no reports or alerting system exists yet)
 
 ---
 
