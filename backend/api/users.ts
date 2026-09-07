@@ -7,6 +7,7 @@ import { sendEmail } from '../lib/email.js'
 import { requireAuth, type AuthedRequest } from '../lib/middleware.js'
 import { logAudit } from '../lib/audit.js'
 import { isNotFoundError } from '../lib/errors.js'
+import { formatDisplayName } from '../lib/names.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): GET /users, POST /users, PUT /users/:id.
@@ -18,15 +19,61 @@ const SETUP_TOKEN_TTL_MS = 48 * 60 * 60 * 1000 // 48 hours
 
 const createUserSchema = z.object({
   email: z.string().email(),
-  name: z.string().min(1),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  middleName: z.string().trim().optional(),
   roles: z.array(z.enum(ROLES)).min(1),
 })
 
-const updateUserSchema = z.object({
-  roles: z.array(z.enum(ROLES)).min(1),
-})
+const updateUserSchema = z
+  .object({
+    roles: z.array(z.enum(ROLES)).min(1).optional(),
+    firstName: z.string().min(1).optional(),
+    lastName: z.string().min(1).optional(),
+    middleName: z.string().trim().optional().nullable(),
+  })
+  .refine(
+    (data) =>
+      data.roles !== undefined ||
+      data.firstName !== undefined ||
+      data.lastName !== undefined ||
+      data.middleName !== undefined,
+    { message: 'Nothing to update' },
+  )
 
-const userSelect = { id: true, email: true, name: true, roles: true, passwordSet: true, createdAt: true } as const
+const userSelect = {
+  id: true,
+  email: true,
+  firstName: true,
+  middleName: true,
+  lastName: true,
+  roles: true,
+  passwordSet: true,
+  createdAt: true,
+} as const
+
+function serialize(u: {
+  id: string
+  email: string
+  firstName: string
+  middleName: string | null
+  lastName: string
+  roles: (typeof ROLES)[number][]
+  passwordSet: boolean
+  createdAt: Date
+}) {
+  return {
+    id: u.id,
+    email: u.email,
+    firstName: u.firstName,
+    middleName: u.middleName,
+    lastName: u.lastName,
+    name: formatDisplayName(u.firstName, u.middleName, u.lastName),
+    roles: u.roles,
+    passwordSet: u.passwordSet,
+    createdAt: u.createdAt,
+  }
+}
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -35,8 +82,11 @@ function requireEnv(name: string): string {
 }
 
 async function handleList(res: VercelResponse) {
-  const users = await prisma.user.findMany({ select: userSelect, orderBy: { name: 'asc' } })
-  res.status(200).json(users)
+  const users = await prisma.user.findMany({
+    select: userSelect,
+    orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+  })
+  res.status(200).json(users.map(serialize))
 }
 
 async function handleCreate(req: AuthedRequest, res: VercelResponse) {
@@ -46,7 +96,7 @@ async function handleCreate(req: AuthedRequest, res: VercelResponse) {
     return
   }
 
-  const { email, name, roles } = parsed.data
+  const { email, firstName, lastName, middleName, roles } = parsed.data
 
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
@@ -59,7 +109,16 @@ async function handleCreate(req: AuthedRequest, res: VercelResponse) {
   const placeholderHash = await hashPassword(randomBytes(32).toString('hex'))
 
   const user = await prisma.user.create({
-    data: { email, name, roles, passwordHash: placeholderHash, passwordSet: false },
+    data: {
+      email,
+      firstName,
+      lastName,
+      middleName: middleName || null,
+      roles,
+      passwordHash: placeholderHash,
+      passwordSet: false,
+    },
+    select: userSelect,
   })
 
   const token = randomBytes(32).toString('base64url')
@@ -72,26 +131,38 @@ async function handleCreate(req: AuthedRequest, res: VercelResponse) {
   await sendEmail(
     email,
     'Set up your BPO Portal account',
-    `<p>Hi ${name},</p>
+    `<p>Hi ${firstName},</p>
      <p>An administrator created an account for you on the BPO Portal.</p>
      <p><a href="${setupUrl}">Click here to set your password</a> and log in. This link expires in 48 hours.</p>
      <p>If you weren't expecting this, you can ignore this email.</p>`,
   )
 
   logAudit(req.auth.sub, 'create', 'user', user.id)
-  res.status(201).json({ id: user.id, email: user.email, name: user.name, roles: user.roles })
+  res.status(201).json(serialize(user))
 }
 
 async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string) {
   const parsed = updateUserSchema.safeParse(req.body)
   if (!parsed.success) {
-    res.status(400).json({ message: 'Invalid roles payload' })
+    res.status(400).json({ message: parsed.error.issues[0]?.message ?? 'Invalid update payload' })
     return
   }
 
+  const { roles, firstName, lastName, middleName } = parsed.data
+  const nameChanged = firstName !== undefined || lastName !== undefined || middleName !== undefined
+
   let user
   try {
-    user = await prisma.user.update({ where: { id }, data: { roles: parsed.data.roles }, select: userSelect })
+    user = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(roles !== undefined ? { roles } : {}),
+        ...(firstName !== undefined ? { firstName } : {}),
+        ...(lastName !== undefined ? { lastName } : {}),
+        ...(middleName !== undefined ? { middleName: middleName || null } : {}),
+      },
+      select: userSelect,
+    })
   } catch (err) {
     if (isNotFoundError(err)) {
       res.status(404).json({ message: 'User not found' })
@@ -100,8 +171,13 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
     throw err
   }
 
-  logAudit(req.auth.sub, 'update_roles', 'user', id)
-  res.status(200).json(user)
+  // Logged as separate audit entries per kind of change, matching the
+  // rest of the app's convention of one action per thing that happened
+  // rather than a single catch-all "update".
+  if (roles !== undefined) logAudit(req.auth.sub, 'update_roles', 'user', id)
+  if (nameChanged) logAudit(req.auth.sub, 'update_name', 'user', id)
+
+  res.status(200).json(serialize(user))
 }
 
 async function handler(req: AuthedRequest, res: VercelResponse) {

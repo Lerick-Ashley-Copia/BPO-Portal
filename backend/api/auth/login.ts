@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../../lib/prisma.js'
 import { signToken, verifyPassword } from '../../lib/auth.js'
 import { withCors } from '../../lib/middleware.js'
+import { formatDisplayName } from '../../lib/names.js'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -40,6 +41,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   res.status(200).json({
     token,
-    user: { id: user.id, email: user.email, name: user.name, roles: user.roles },
+    user: {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      name: formatDisplayName(user.firstName, user.middleName, user.lastName),
+      roles: user.roles,
+    },
   })
 }

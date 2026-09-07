@@ -31,7 +31,7 @@ export function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">
-        Welcome{user?.name ? `, ${user.name}` : ''}
+        Welcome{user?.firstName ? `, ${user.firstName}` : ''}
       </h1>
       {user && (
         <p className="mt-1 text-sm text-gray-500">

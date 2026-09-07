@@ -59,7 +59,7 @@ cd backend
 npx vercel link                                  # first time only, links to the Vercel project
 npx vercel env pull .env.local --environment=development
 cp .env.local .env
-# then append ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_NAME to .env for the seed script
+# then append ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_FIRST_NAME / ADMIN_LAST_NAME to .env for the seed script
 npm install
 npm run prisma:migrate   # creates tables from prisma/schema.prisma
 npm run prisma:seed      # creates the first admin user + sample data

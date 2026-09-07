@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../lib/middleware.js'
 import { logAudit } from '../lib/audit.js'
 import { isNotFoundError } from '../lib/errors.js'
+import { formatDisplayName } from '../lib/names.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): GET /employees, GET /employees/me,
@@ -18,12 +19,16 @@ const updateSchema = z.object({
 })
 
 const employeeSelect = {
-  include: { department: true, team: true, user: { select: { name: true, email: true } } },
+  include: {
+    department: true,
+    team: true,
+    user: { select: { firstName: true, middleName: true, lastName: true, email: true } },
+  },
 } as const
 
 function serialize(e: {
   id: string
-  user: { name: string; email: string }
+  user: { firstName: string; middleName: string | null; lastName: string; email: string }
   department: { name: string } | null
   departmentId: string | null
   team: { name: string } | null
@@ -35,7 +40,7 @@ function serialize(e: {
 }) {
   return {
     id: e.id,
-    name: e.user.name,
+    name: formatDisplayName(e.user.firstName, e.user.middleName, e.user.lastName),
     email: e.user.email,
     departmentId: e.departmentId,
     department: e.department?.name ?? null,
@@ -59,7 +64,7 @@ async function handleList(req: AuthedRequest, res: VercelResponse) {
   }
   const employees = await prisma.employee.findMany({
     ...employeeSelect,
-    orderBy: { user: { name: 'asc' } },
+    orderBy: [{ user: { lastName: 'asc' } }, { user: { firstName: 'asc' } }],
   })
   res.status(200).json(employees.map(serialize))
 }

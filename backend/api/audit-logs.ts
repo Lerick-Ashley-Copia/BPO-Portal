@@ -1,6 +1,7 @@
 import type { VercelResponse } from '@vercel/node'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../lib/middleware.js'
+import { formatDisplayName } from '../lib/names.js'
 
 async function handler(req: AuthedRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -18,20 +19,23 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
   const userIds = [...new Set(logs.map((l) => l.userId))]
   const users = await prisma.user.findMany({
     where: { id: { in: userIds } },
-    select: { id: true, name: true, email: true },
+    select: { id: true, firstName: true, middleName: true, lastName: true, email: true },
   })
   const userById = new Map(users.map((u) => [u.id, u]))
 
   res.status(200).json(
-    logs.map((l) => ({
-      id: l.id,
-      user: userById.get(l.userId)?.name ?? 'Unknown',
-      action: l.action,
-      resource: l.resource,
-      resourceId: l.resourceId,
-      result: l.result,
-      createdAt: l.createdAt,
-    })),
+    logs.map((l) => {
+      const actor = userById.get(l.userId)
+      return {
+        id: l.id,
+        user: actor ? formatDisplayName(actor.firstName, actor.middleName, actor.lastName) : 'Unknown',
+        action: l.action,
+        resource: l.resource,
+        resourceId: l.resourceId,
+        result: l.result,
+        createdAt: l.createdAt,
+      }
+    }),
   )
 }
 

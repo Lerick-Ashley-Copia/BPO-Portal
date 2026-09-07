@@ -8,6 +8,7 @@ import { isNotFoundError } from '../lib/errors.js'
 import { inclusiveDayCount, todayInManila } from '../lib/dates.js'
 import { buildAttendanceXlsx } from '../lib/attendanceReport.js'
 import { getDownloadUrl, putObject } from '../lib/s3.js'
+import { formatDisplayName } from '../lib/names.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): leave requests + daily attendance
@@ -40,7 +41,11 @@ async function handleListLeaveRequests(req: AuthedRequest, res: VercelResponse) 
 
   const requests = await prisma.leaveRequest.findMany({
     where,
-    include: { employee: { include: { user: { select: { name: true, email: true } } } } },
+    include: {
+      employee: {
+        include: { user: { select: { firstName: true, middleName: true, lastName: true, email: true } } },
+      },
+    },
     orderBy: { createdAt: 'desc' },
   })
 
@@ -48,7 +53,7 @@ async function handleListLeaveRequests(req: AuthedRequest, res: VercelResponse) 
     requests.map((r) => ({
       id: r.id,
       employeeId: r.employeeId,
-      employeeName: r.employee.user.name,
+      employeeName: formatDisplayName(r.employee.user.firstName, r.employee.user.middleName, r.employee.user.lastName),
       startDate: r.startDate,
       endDate: r.endDate,
       days: r.days,
@@ -89,14 +94,14 @@ async function handleCreateLeaveRequest(req: AuthedRequest, res: VercelResponse)
 
   const hrAndAdmins = await prisma.user.findMany({
     where: { roles: { hasSome: ['hr', 'admin'] } },
-    select: { email: true, name: true },
+    select: { email: true, firstName: true },
   })
   const requesterName = req.auth.email
   for (const recipient of hrAndAdmins) {
     sendEmail(
       recipient.email,
       'New leave request submitted',
-      `<p>Hi ${recipient.name},</p>
+      `<p>Hi ${recipient.firstName},</p>
        <p>${requesterName} submitted a leave request for ${days} day(s), from ${startDate.toDateString()} to ${endDate.toDateString()}.</p>
        <p>Review it in the BPO Portal under Leave Requests.</p>`,
     )
@@ -172,15 +177,19 @@ async function handleListAttendance(req: AuthedRequest, res: VercelResponse) {
 
   const records = await prisma.attendanceRecord.findMany({
     where,
-    include: { employee: { include: { user: { select: { name: true } } } } },
-    orderBy: [{ date: 'desc' }, { employee: { user: { name: 'asc' } } }],
+    include: { employee: { include: { user: { select: { firstName: true, middleName: true, lastName: true } } } } },
+    orderBy: [
+      { date: 'desc' },
+      { employee: { user: { lastName: 'asc' } } },
+      { employee: { user: { firstName: 'asc' } } },
+    ],
     take: range ? 1000 : 200,
   })
 
   res.status(200).json(
     records.map((r) => ({
       id: r.id,
-      employeeName: r.employee.user.name,
+      employeeName: formatDisplayName(r.employee.user.firstName, r.employee.user.middleName, r.employee.user.lastName),
       date: r.date,
       checkInAt: r.checkInAt,
       checkOutAt: r.checkOutAt,
@@ -198,15 +207,19 @@ async function handleExportAttendance(req: AuthedRequest, res: VercelResponse) {
   const scope = isHrOrAdmin(req) ? {} : { employee: { userId: req.auth.sub } }
   const records = await prisma.attendanceRecord.findMany({
     where: { ...scope, date: range },
-    include: { employee: { include: { user: { select: { name: true } } } } },
-    orderBy: [{ date: 'asc' }, { employee: { user: { name: 'asc' } } }],
+    include: { employee: { include: { user: { select: { firstName: true, middleName: true, lastName: true } } } } },
+    orderBy: [
+      { date: 'asc' },
+      { employee: { user: { lastName: 'asc' } } },
+      { employee: { user: { firstName: 'asc' } } },
+    ],
     take: 1000,
   })
 
   const buffer = await buildAttendanceXlsx(
     records.map((r) => ({
       date: r.date,
-      employeeName: r.employee.user.name,
+      employeeName: formatDisplayName(r.employee.user.firstName, r.employee.user.middleName, r.employee.user.lastName),
       checkInAt: r.checkInAt,
       checkOutAt: r.checkOutAt,
     })),

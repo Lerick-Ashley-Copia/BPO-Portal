@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../../lib/prisma.js'
 import { hashPassword, signToken } from '../../lib/auth.js'
 import { withCors } from '../../lib/middleware.js'
+import { formatDisplayName } from '../../lib/names.js'
 
 const setPasswordSchema = z.object({
   token: z.string().min(1),
@@ -54,6 +55,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   res.status(200).json({
     token: jwt,
-    user: { id: user.id, email: user.email, name: user.name, roles: user.roles },
+    user: {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      name: formatDisplayName(user.firstName, user.middleName, user.lastName),
+      roles: user.roles,
+    },
   })
 }
