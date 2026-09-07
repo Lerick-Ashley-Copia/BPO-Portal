@@ -28,6 +28,8 @@ interface AuthContextValue {
   refreshAttendance: () => void
   justCheckedIn: boolean
   dismissJustCheckedIn: () => void
+  checkInError: string | null
+  retryCheckIn: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -47,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus | null>(null)
   const [justCheckedIn, setJustCheckedIn] = useState(false)
+  const [checkInError, setCheckInError] = useState<string | null>(null)
   const autoCheckInTried = useRef(false)
 
   function refreshAttendance() {
@@ -60,13 +63,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setJustCheckedIn(false)
   }
 
+  function attemptCheckIn() {
+    api
+      .post<AttendanceStatus>('/leave/attendance/checkin')
+      .then((status) => {
+        setAttendanceStatus(status)
+        setJustCheckedIn(true)
+        setCheckInError(null)
+      })
+      .catch((err) => {
+        // A 404 means there's no employee profile on file yet — not a
+        // real failure, nothing to surface. Anything else (a dropped
+        // request, a transient server error) is worth telling the
+        // person about, with a way to retry, instead of silently
+        // leaving them un-checked-in for the day.
+        if (err instanceof ApiError && err.status === 404) return
+        setCheckInError(err instanceof ApiError ? err.message : 'Could not check in automatically')
+      })
+  }
+
+  function retryCheckIn() {
+    setCheckInError(null)
+    attemptCheckIn()
+  }
+
   useEffect(() => {
     if (user) {
       autoCheckInTried.current = false
+      setCheckInError(null)
       refreshAttendance()
     } else {
       setAttendanceStatus(null)
       setJustCheckedIn(false)
+      setCheckInError(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
@@ -77,15 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user || !attendanceStatus || attendanceStatus.checkedIn || autoCheckInTried.current) return
     autoCheckInTried.current = true
-    api
-      .post<AttendanceStatus>('/leave/attendance/checkin')
-      .then((status) => {
-        setAttendanceStatus(status)
-        setJustCheckedIn(true)
-      })
-      .catch(() => {
-        // e.g. no employee profile on file yet — nothing to surface here
-      })
+    attemptCheckIn()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, attendanceStatus])
 
@@ -161,6 +182,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshAttendance,
         justCheckedIn,
         dismissJustCheckedIn,
+        checkInError,
+        retryCheckIn,
       }}
     >
       {children}
