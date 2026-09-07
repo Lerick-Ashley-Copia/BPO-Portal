@@ -123,8 +123,8 @@ function BenefitCard({
 }
 
 export function BenefitsPage() {
-  const { user } = useAuth()
-  const canManage = user?.roles.some((r) => r === 'hr' || r === 'admin') ?? false
+  const { effectiveRoles } = useAuth()
+  const canManage = effectiveRoles.some((r) => r === 'hr' || r === 'admin')
   const [data, setData] = useState<Benefit[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

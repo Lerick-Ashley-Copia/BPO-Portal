@@ -276,8 +276,8 @@ function CreateTeamOrDepartment({
 }
 
 function EmployeeDirectory() {
-  const { user } = useAuth()
-  const isAdmin = user?.roles.includes('admin') ?? false
+  const { effectiveRoles } = useAuth()
+  const isAdmin = effectiveRoles.includes('admin')
   const [employees, setEmployees] = useState<EmployeeRecord[] | null>(null)
   const [departments, setDepartments] = useState<Department[]>([])
   const [teams, setTeams] = useState<Team[]>([])
@@ -353,8 +353,8 @@ function EmployeeDirectory() {
 }
 
 export function HrisPage() {
-  const { user } = useAuth()
-  const canManage = user?.roles.some((r) => r === 'hr' || r === 'admin') ?? false
+  const { effectiveRoles } = useAuth()
+  const canManage = effectiveRoles.some((r) => r === 'hr' || r === 'admin')
 
   return (
     <div>
