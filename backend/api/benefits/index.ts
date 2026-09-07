@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../../lib/middleware.js'
 import { logAudit } from '../../lib/audit.js'
+import { isNotFoundError } from '../../lib/errors.js'
 
 // GET /benefits, POST /benefits (create), PUT/DELETE /benefits/:id (via
 // a vercel.json rewrite arriving as ?sub=<id>). Create/update/delete are
@@ -49,7 +50,16 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
     res.status(400).json({ message: 'Invalid benefit payload' })
     return
   }
-  const benefit = await prisma.benefit.update({ where: { id }, data: parsed.data })
+  let benefit
+  try {
+    benefit = await prisma.benefit.update({ where: { id }, data: parsed.data })
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      res.status(404).json({ message: 'Benefit not found' })
+      return
+    }
+    throw err
+  }
   logAudit(req.auth.sub, 'update', 'benefit', id)
   res.status(200).json(benefit)
 }
@@ -59,7 +69,15 @@ async function handleDelete(req: AuthedRequest, res: VercelResponse, id: string)
     res.status(403).json({ message: 'Insufficient permissions' })
     return
   }
-  await prisma.benefit.delete({ where: { id } })
+  try {
+    await prisma.benefit.delete({ where: { id } })
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      res.status(404).json({ message: 'Benefit not found' })
+      return
+    }
+    throw err
+  }
   logAudit(req.auth.sub, 'delete', 'benefit', id)
   res.status(204).end()
 }

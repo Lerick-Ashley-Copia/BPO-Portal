@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../../lib/middleware.js'
 import { logAudit } from '../../lib/audit.js'
+import { isNotFoundError } from '../../lib/errors.js'
 
 // GET /announcements, POST /announcements (create), PUT/DELETE
 // /announcements/:id (via a vercel.json rewrite arriving as ?sub=<id>).
@@ -69,16 +70,25 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
   }
 
   const { title, content, published, publishAt, expireAt } = parsed.data
-  const announcement = await prisma.announcement.update({
-    where: { id },
-    data: {
-      ...(title !== undefined && { title }),
-      ...(content !== undefined && { content }),
-      ...(published !== undefined && { published }),
-      ...(publishAt !== undefined && { publishAt: new Date(publishAt) }),
-      ...(expireAt !== undefined && { expireAt: expireAt ? new Date(expireAt) : null }),
-    },
-  })
+  let announcement
+  try {
+    announcement = await prisma.announcement.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(content !== undefined && { content }),
+        ...(published !== undefined && { published }),
+        ...(publishAt !== undefined && { publishAt: new Date(publishAt) }),
+        ...(expireAt !== undefined && { expireAt: expireAt ? new Date(expireAt) : null }),
+      },
+    })
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      res.status(404).json({ message: 'Announcement not found' })
+      return
+    }
+    throw err
+  }
 
   logAudit(req.auth.sub, 'update', 'announcement', id)
   res.status(200).json(announcement)
@@ -89,7 +99,15 @@ async function handleDelete(req: AuthedRequest, res: VercelResponse, id: string)
     res.status(403).json({ message: 'Insufficient permissions' })
     return
   }
-  await prisma.announcement.delete({ where: { id } })
+  try {
+    await prisma.announcement.delete({ where: { id } })
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      res.status(404).json({ message: 'Announcement not found' })
+      return
+    }
+    throw err
+  }
   logAudit(req.auth.sub, 'delete', 'announcement', id)
   res.status(204).end()
 }

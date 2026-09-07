@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth, type AuthedRequest } from '../lib/middleware.js'
 import { logAudit } from '../lib/audit.js'
+import { isNotFoundError } from '../lib/errors.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): GET /employees, GET /employees/me,
@@ -83,11 +84,16 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
     res.status(400).json({ message: 'Invalid update payload' })
     return
   }
-  const employee = await prisma.employee.update({
-    where: { id },
-    data: parsed.data,
-    ...employeeSelect,
-  })
+  let employee
+  try {
+    employee = await prisma.employee.update({ where: { id }, data: parsed.data, ...employeeSelect })
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      res.status(404).json({ message: 'Employee not found' })
+      return
+    }
+    throw err
+  }
   logAudit(req.auth.sub, 'update', 'employee', id)
   res.status(200).json(serialize(employee))
 }

@@ -6,6 +6,7 @@ import { hashPassword } from '../lib/auth.js'
 import { sendEmail } from '../lib/email.js'
 import { requireAuth, type AuthedRequest } from '../lib/middleware.js'
 import { logAudit } from '../lib/audit.js'
+import { isNotFoundError } from '../lib/errors.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): GET /users, POST /users, PUT /users/:id.
@@ -88,11 +89,16 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
     return
   }
 
-  const user = await prisma.user.update({
-    where: { id },
-    data: { roles: parsed.data.roles },
-    select: userSelect,
-  })
+  let user
+  try {
+    user = await prisma.user.update({ where: { id }, data: { roles: parsed.data.roles }, select: userSelect })
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      res.status(404).json({ message: 'User not found' })
+      return
+    }
+    throw err
+  }
 
   logAudit(req.auth.sub, 'update_roles', 'user', id)
   res.status(200).json(user)

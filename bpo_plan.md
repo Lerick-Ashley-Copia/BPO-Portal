@@ -1088,16 +1088,44 @@ this isn't implemented yet — only Team Leader/Manager/HR/Admin can see reports
 
 ## Phase 7 — Security & Testing
 
-* [ ] Permission testing
-* [ ] API security testing
-* [ ] Input validation
-* [ ] Authentication testing
-* [ ] S3 access testing
-* [ ] Database backup strategy
-* [ ] Error handling
-* [ ] Performance testing
-* [ ] File upload testing
-* [ ] Report-generation testing
+* [x] Permission testing — created a temporary test user per role (employee, team_leader, manager,
+  hr; admin already existed) and ran a scripted matrix across every endpoint: 63/63 passed. Also
+  verified report team-scoping specifically (a team_leader can create/submit only for their own
+  team, cannot review/approve/reject their own submission, a manager cannot edit another team's
+  draft) — all correct.
+* [x] API security testing — CORS locked to the exact frontend origin (not wildcard); confirmed a
+  forged JWT (wrong secret), a tampered signature, and a classic `alg:none` unsigned-token attack
+  are all rejected with 401; confirmed login returns the same generic "Invalid credentials" for
+  both a wrong password and a nonexistent email (no user-enumeration signal).
+* [x] Input validation — audited every mutating endpoint (7 files): all have zod schemas on their
+  request bodies, no gaps found.
+* [x] Authentication testing — missing/malformed/tampered/forged tokens all correctly rejected
+  (401). Expired-token rejection confirmed correct using a token expired by 2 hours; a token
+  expired by only ~10 seconds was inconsistently accepted, but that's ordinary clock skew across
+  a distributed serverless deployment, not a bug — tokens live 8 hours in production, so a
+  10-second margin never matters in practice.
+* [x] S3 access testing — confirmed the B2 bucket rejects both anonymous object reads and
+  anonymous bucket listing (private, as required by section 14). Presigned URLs use the
+  well-audited AWS SDK presigner at a 5-minute expiry.
+* [x] Database backup strategy — Neon's **free tier gives only a 6-hour point-in-time-recovery
+  window** (capped at 1GB of changes); the Launch plan extends this to 7 days. **This is a real
+  gap**: anything deleted/corrupted and not caught within 6 hours today is unrecoverable. Upgrading
+  to Launch (or exporting periodic `pg_dump` snapshots) should happen before real HR data goes in
+  — tracked alongside the existing shared-dev/prod-database simplification.
+* [x] Error handling — found and fixed a real bug: 6 endpoints (`PUT /employees/:id`,
+  `PUT /users/:id`, `PUT`/`DELETE /announcements/:id`, `PUT`/`DELETE /benefits/:id`) crashed with
+  an unhandled Prisma error (raw 500) when targeting a nonexistent id, instead of a clean 404.
+  Vercel's platform already prevented any internal detail (stack trace, DB info) from reaching the
+  client even during the crash, so this was a robustness bug, not a leak — now fixed everywhere.
+* [x] Performance testing — key endpoints respond in ~0.4-0.65s round-trip (Philippines →
+  us-east-1 Vercel function → us-east-1 Neon → back); reasonable for a low-traffic internal tool,
+  no optimization needed yet.
+* [x] File upload testing — confirmed the 4MB size cap is enforced server-side (not just in the
+  UI), and confirmed a path-traversal filename (`../../../etc/passwd`) is neutralized to a safe
+  storage key rather than escaping the intended S3 prefix.
+* [x] Report-generation testing — CSV/XLSX/PDF export all produce valid files (verified with the
+  `file` command against real output) end-to-end through the full lifecycle, covered during
+  Phase 5.
 
 ---
 
