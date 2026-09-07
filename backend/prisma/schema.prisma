@@ -52,11 +52,12 @@ model Department {
 }
 
 model Team {
-  id           String     @id @default(uuid())
-  name         String
-  department   Department @relation(fields: [departmentId], references: [id])
-  departmentId String
-  employees    Employee[]
+  id            String         @id @default(uuid())
+  name          String
+  department    Department     @relation(fields: [departmentId], references: [id])
+  departmentId  String
+  employees     Employee[]
+  weeklyReports WeeklyReport[]
 
   @@map("teams")
 }
@@ -133,6 +134,7 @@ enum ReportStatus {
 
 model WeeklyReport {
   id          String       @id @default(uuid())
+  team        Team         @relation(fields: [teamId], references: [id])
   teamId      String
   periodStart DateTime
   periodEnd   DateTime

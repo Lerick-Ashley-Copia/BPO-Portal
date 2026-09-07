@@ -12,6 +12,8 @@
     { "source": "/api/users/:id", "destination": "/api/users?sub=:id" },
     { "source": "/api/documents/:id/download", "destination": "/api/documents?sub=:id" },
     { "source": "/api/announcements/:id", "destination": "/api/announcements?sub=:id" },
-    { "source": "/api/benefits/:id", "destination": "/api/benefits?sub=:id" }
+    { "source": "/api/benefits/:id", "destination": "/api/benefits?sub=:id" },
+    { "source": "/api/reports/:id/export", "destination": "/api/reports?sub=:id" },
+    { "source": "/api/reports/:id", "destination": "/api/reports?sub=:id" }
   ]
 }

@@ -1044,16 +1044,24 @@ Avoid putting all business logic directly inside API route handlers.
 
 ## Phase 5 — Reports
 
-* [ ] Weekly report database structure
-* [ ] Report creation
-* [ ] Report submission
-* [ ] Report review
-* [ ] Report approval
-* [ ] Report history
-* [ ] CSV export
-* [ ] XLSX export
-* [ ] PDF export
-* [ ] Store generated reports in S3
+* [x] Weekly report database structure (added the Team relation that was missing from the
+  original Phase 1 scaffold)
+* [x] Report creation — Team Leader (own team only), HR, Admin
+* [x] Report submission — draft/rejected → submitted
+* [x] Report review — Manager/HR/Admin: submitted → reviewed
+* [x] Report approval — Manager/HR/Admin: reviewed → approved; approved reports are immutable
+  (matches "do not silently overwrite previously approved reports" in section 8)
+* [x] Report history — full record retained through every status; rejecting keeps a manager
+  comment and reopening returns it to draft rather than deleting anything
+* [x] CSV export
+* [x] XLSX export (via `exceljs` — the more obvious `xlsx`/SheetJS package has two unpatched
+  high-severity vulnerabilities, so used the actively-maintained alternative instead)
+* [x] PDF export (via `pdf-lib`)
+* [x] Store generated reports in S3 — generated on demand and uploaded to B2 under `reports/`,
+  presigned URL returned (not persisted/reused — regenerated fresh on every export request)
+
+Known gap: the plan lists "View applicable reports" as a base Employee capability (section 5);
+this isn't implemented yet — only Team Leader/Manager/HR/Admin can see reports right now.
 
 ---
 
