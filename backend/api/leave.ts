@@ -6,6 +6,8 @@ import { logAudit } from '../lib/audit.js'
 import { sendEmail } from '../lib/email.js'
 import { isNotFoundError } from '../lib/errors.js'
 import { inclusiveDayCount, todayInManila } from '../lib/dates.js'
+import { buildAttendanceXlsx } from '../lib/attendanceReport.js'
+import { getDownloadUrl, putObject } from '../lib/s3.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): leave requests + daily attendance
@@ -147,14 +149,32 @@ async function handleReviewLeaveRequest(req: AuthedRequest, res: VercelResponse,
 
 // ---- Attendance ----
 
+const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
+
+// Query params come in as plain YYYY-MM-DD strings (a single date, or
+// the endpoints of a range — the frontend sends the same value for
+// both when the user picks just one day). Parsed as UTC midnight to
+// match how `date` is stored (see todayInManila()).
+function parseDateRange(req: AuthedRequest): { gte: Date; lte: Date } | null {
+  const from = typeof req.query.from === 'string' ? req.query.from : undefined
+  const to = typeof req.query.to === 'string' ? req.query.to : undefined
+  if (!from && !to) return null
+  const fromStr = from && dateOnlyPattern.test(from) ? from : undefined
+  const toStr = to && dateOnlyPattern.test(to) ? to : fromStr
+  if (!fromStr || !toStr) return null
+  return { gte: new Date(`${fromStr}T00:00:00.000Z`), lte: new Date(`${toStr}T00:00:00.000Z`) }
+}
+
 async function handleListAttendance(req: AuthedRequest, res: VercelResponse) {
-  const where = isHrOrAdmin(req) ? {} : { employee: { userId: req.auth.sub } }
+  const scope = isHrOrAdmin(req) ? {} : { employee: { userId: req.auth.sub } }
+  const range = parseDateRange(req)
+  const where = range ? { ...scope, date: range } : scope
 
   const records = await prisma.attendanceRecord.findMany({
     where,
     include: { employee: { include: { user: { select: { name: true } } } } },
-    orderBy: { date: 'desc' },
-    take: 200,
+    orderBy: [{ date: 'desc' }, { employee: { user: { name: 'asc' } } }],
+    take: range ? 1000 : 200,
   })
 
   res.status(200).json(
@@ -166,6 +186,42 @@ async function handleListAttendance(req: AuthedRequest, res: VercelResponse) {
       checkOutAt: r.checkOutAt,
     })),
   )
+}
+
+async function handleExportAttendance(req: AuthedRequest, res: VercelResponse) {
+  const range = parseDateRange(req)
+  if (!range) {
+    res.status(400).json({ message: 'from (and optionally to) is required, as YYYY-MM-DD' })
+    return
+  }
+
+  const scope = isHrOrAdmin(req) ? {} : { employee: { userId: req.auth.sub } }
+  const records = await prisma.attendanceRecord.findMany({
+    where: { ...scope, date: range },
+    include: { employee: { include: { user: { select: { name: true } } } } },
+    orderBy: [{ date: 'asc' }, { employee: { user: { name: 'asc' } } }],
+    take: 1000,
+  })
+
+  const buffer = await buildAttendanceXlsx(
+    records.map((r) => ({
+      date: r.date,
+      employeeName: r.employee.user.name,
+      checkInAt: r.checkInAt,
+      checkOutAt: r.checkOutAt,
+    })),
+  )
+
+  const storageKey = `attendance-exports/${req.auth.sub}-${Date.now()}.xlsx`
+  await putObject(
+    storageKey,
+    buffer,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
+  const url = await getDownloadUrl(storageKey)
+
+  logAudit(req.auth.sub, 'export', 'attendance', storageKey)
+  res.status(200).json({ url })
 }
 
 async function handleAttendanceToday(req: AuthedRequest, res: VercelResponse) {
@@ -251,6 +307,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
     if (sub === 'today' && req.method === 'GET') return handleAttendanceToday(req, res)
     if (sub === 'checkin' && req.method === 'POST') return handleCheckIn(req, res)
     if (sub === 'checkout' && req.method === 'POST') return handleCheckOut(req, res)
+    if (sub === 'export' && req.method === 'GET') return handleExportAttendance(req, res)
   }
 
   res.status(404).json({ message: 'Not found' })

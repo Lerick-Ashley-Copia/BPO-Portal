@@ -20,6 +20,7 @@
     { "source": "/api/leave/attendance", "destination": "/api/leave?resource=attendance" },
     { "source": "/api/leave/attendance/today", "destination": "/api/leave?resource=attendance&sub=today" },
     { "source": "/api/leave/attendance/checkin", "destination": "/api/leave?resource=attendance&sub=checkin" },
-    { "source": "/api/leave/attendance/checkout", "destination": "/api/leave?resource=attendance&sub=checkout" }
+    { "source": "/api/leave/attendance/checkout", "destination": "/api/leave?resource=attendance&sub=checkout" },
+    { "source": "/api/leave/attendance/export", "destination": "/api/leave?resource=attendance&sub=export" }
   ]
 }
