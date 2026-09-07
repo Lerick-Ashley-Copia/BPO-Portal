@@ -1240,6 +1240,18 @@ from Phase 10's notification system for approval flows.
     per approved request regardless of duration? The former matches how paid leave normally works;
     confirm which one is actually wanted before building the schema/logic around it.
 * [ ] Attendance management
+  * Daily check-in/check-out. On the Dashboard, show a "Check In" prompt if the employee hasn't
+    checked in yet today (needs a per-employee, per-day attendance record — checkInAt, checkOutAt
+    nullable until checkout; timezone handling for where "today" starts/ends still open).
+  * A "Check Out" button next to the header's existing "Log out" button, available once checked in
+    and not yet checked out for the day.
+  * **Open question, decide at build time**: is Check Out independent of Log out (you can check
+    out and keep using the app, then log out separately later), or does clicking Check Out also
+    log the user out in the same action? The user's phrasing ("checkout button next to logout;
+    which with checkout + logout") wasn't fully clear on this — confirm before building.
+  * This is presumably the actual attendance data source for the Weekly Reports "Attendance"
+    field (currently free text — Phase 5) and for Manager/HR "View team attendance" (section 5)
+    once built.
 
 ---
 
