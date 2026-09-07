@@ -1,3 +1,3 @@
 @echo off
 cd /d "%~dp0backend"
-npm run dev
+npm run local
