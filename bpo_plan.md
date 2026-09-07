@@ -989,52 +989,56 @@ Avoid putting all business logic directly inside API route handlers.
 
 ## Phase 1 — Foundation
 
-* [ ] Create GitHub repositories
-* [ ] Create frontend project
-* [ ] Create backend project
-* [ ] Configure Vercel
-* [ ] Configure GitHub Pages
-* [ ] Create PostgreSQL database
-* [ ] Create S3 bucket
-* [ ] Configure environment variables
-* [ ] Establish development and production environments
+* [x] Create GitHub repositories
+* [x] Create frontend project
+* [x] Create backend project
+* [x] Configure Vercel
+* [x] Configure GitHub Pages
+* [x] Create PostgreSQL database (Neon, via Vercel Marketplace)
+* [x] Create S3 bucket (Backblaze B2 — AWS S3 requires a credit card at signup, B2 doesn't)
+* [x] Configure environment variables
+* [x] Establish development and production environments — simplified: dev/preview/production
+  currently share the same Neon database and B2 bucket. Fine while it's one person building;
+  should be split before real HR data goes in.
 
 ---
 
 ## Phase 2 — Authentication
 
-* [ ] Implement login
-* [ ] Implement logout
-* [ ] Implement sessions
-* [ ] Implement roles
-* [ ] Implement permissions
-* [ ] Protect API endpoints
-* [ ] Create initial admin access
-* [ ] Test unauthorized access
+* [x] Implement login
+* [x] Implement logout
+* [x] Implement sessions (JWT bearer tokens)
+* [x] Implement roles
+* [x] Implement permissions (role-gated endpoints; no finer-grained permission model yet)
+* [x] Protect API endpoints
+* [x] Create initial admin access
+* [x] Test unauthorized access (confirmed 401 without a token on live deployment)
 
 ---
 
 ## Phase 3 — Core Portal
 
-* [ ] Build dashboard
-* [ ] Build announcements
-* [ ] Build benefits
-* [ ] Build documents
-* [ ] Build navigation
-* [ ] Implement responsive design
-* [ ] Implement loading/error states
+* [x] Build dashboard
+* [x] Build announcements (read-only; create/edit is Phase 6 content management)
+* [x] Build benefits (read-only; create/edit is Phase 6 content management)
+* [x] Build documents (presigned download via S3/B2; upload UI is Phase 6 document management)
+* [x] Build navigation
+* [x] Implement responsive design
+* [x] Implement loading/error states
 
 ---
 
 ## Phase 4 — HRIS
 
-* [ ] Employee profiles
-* [ ] Team assignments
-* [ ] Department information
-* [ ] Employee status
-* [ ] HR permissions
-* [ ] Employee self-service
-* [ ] Employee document access
+* [x] Employee profiles
+* [x] Team assignments (HR/Admin can assign an employee to a department + team; creating new
+  teams/departments themselves is Phase 6 team/department management, not built yet)
+* [x] Department information
+* [x] Employee status
+* [x] HR permissions (HR and Admin roles can edit any employee record)
+* [x] Employee self-service (every user can view their own profile at `/hris`)
+* [x] Employee document access — covered by the existing Documents module's role-based
+  `accessLevel` gating (Phase 3), not a separate per-employee document system
 
 ---
 

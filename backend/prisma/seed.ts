@@ -130,6 +130,33 @@ async function main() {
     })
     console.log('Seeded sample documents (uploaded to S3/B2)')
   }
+
+  if ((await prisma.department.count()) === 0) {
+    const [operations, support] = await Promise.all([
+      prisma.department.create({ data: { name: 'Operations' } }),
+      prisma.department.create({ data: { name: 'Support' } }),
+    ])
+
+    const [teamA, teamB] = await Promise.all([
+      prisma.team.create({ data: { name: 'Team A', departmentId: operations.id } }),
+      prisma.team.create({ data: { name: 'Team B', departmentId: support.id } }),
+    ])
+
+    await prisma.employee.upsert({
+      where: { userId: admin.id },
+      update: {},
+      create: {
+        userId: admin.id,
+        departmentId: operations.id,
+        teamId: teamA.id,
+        position: 'Portal Administrator',
+        status: 'active',
+        dateHired: new Date(),
+      },
+    })
+
+    console.log(`Seeded departments/teams (${operations.name}, ${support.name} / ${teamA.name}, ${teamB.name}) and admin employee profile`)
+  }
 }
 
 main()
