@@ -1067,10 +1067,14 @@ this isn't implemented yet — only Team Leader/Manager/HR/Admin can see reports
 
 ## Phase 6 — Administration
 
-* [x] User management — admin creates an account (email/name/roles); backend generates a
-  single-use, 48-hour setup token and emails a set-password link via Gmail API (OAuth,
-  authenticated as a real account, not a plaintext password and not a shared sender). Admin
-  can also reassign any user's roles from the same page.
+* [x] User management — admin creates an account (email/structured name/roles); backend generates
+  a single-use, 48-hour setup token and emails a set-password link via Gmail API (OAuth,
+  authenticated as a real account, not a plaintext password and not a shared sender). Name is
+  stored as First/Last (required) + Middle (optional) rather than one free-text field. Admin can
+  edit any user's name and reassign roles from the same page, each kind of change recorded as its
+  own audit entry (`update_name` / `update_roles`). Display format everywhere else in the app is
+  "First M. Last" (middle name abbreviated to an initial) via a shared `formatDisplayName()`
+  helper — the Dashboard greeting is the one exception and stays first-name-only.
 * [x] Employee management — covered in Phase 4 (HR/Admin can edit position, status, team,
   department for any employee)
 * [x] Team management — Admin can create teams (name + department); renaming/deleting not built yet
