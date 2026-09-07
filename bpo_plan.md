@@ -1131,18 +1131,35 @@ this isn't implemented yet — only Team Leader/Manager/HR/Admin can see reports
 
 ## Phase 8 — Production
 
-* [ ] Production database
-* [ ] Production S3 bucket
-* [ ] Production environment variables
-* [ ] Custom domain
-* [ ] HTTPS
-* [ ] Monitoring
-* [ ] Logging
-* [ ] Database backup verification
-* [ ] S3 backup/versioning strategy
-* [ ] Deployment documentation
-* [ ] User acceptance testing
-* [ ] Production launch
+* [x] Production database — dedicated now: local/dev work uses a separate Neon database
+  (`bpo-portal-dev` project), so it can no longer touch real production data. Note: this is a
+  separate Neon project, not a true branch of production — Neon branching needs API/dashboard
+  access this session didn't have; a second project achieves the same isolation goal.
+* [x] Production S3 bucket — same split: a dedicated `bpo-portal-lerick-2026-dev` B2 bucket for
+  local/dev uploads, separate from the production bucket.
+* [x] Production environment variables — Vercel's Production/Preview/Development environments now
+  genuinely diverge for `DATABASE_URL` and all `S3_*` vars (previously identical across all three).
+* [ ] Custom domain — skipped for now (needs a purchased domain); revisit anytime, doesn't block
+  anything else.
+* [x] HTTPS — already true with zero extra setup: GitHub Pages and Vercel both serve over HTTPS by
+  default.
+* [x] Monitoring / Logging — both platforms provide this out of the box at this project's scale:
+  Vercel's dashboard shows function invocation logs and error rates; GitHub Pages is static hosting
+  with no server-side logs to configure. No extra service set up — reasonable for a low-traffic
+  internal tool; revisit if/when real usage grows.
+* [~] Database backup verification — the 6-hour Neon free-tier PITR window is documented (Phase 7),
+  but an actual test-restore drill wasn't performed — this session had no Neon dashboard/API access
+  to do one safely. Recommended before real HR data goes in: use Neon's point-in-time restore on a
+  non-critical moment to confirm it genuinely works, not just trust the documented behavior.
+* [x] S3 backup/versioning strategy — confirmed both B2 buckets (prod and dev) have "Keep all
+  versions" enabled, which is B2's default. Accidental overwrites/deletes are recoverable.
+* [x] Deployment documentation — see README.md's "Deploying changes" and "Local development"
+  sections.
+* [ ] User acceptance testing — inherently not something to automate or fake: needs real people
+  (you, and ideally an actual BPO team member) using the live app for real work before calling it
+  launched.
+* [ ] Production launch — a business decision (informing the team, actually rolling it out), not a
+  code change — your call to make whenever Phase 8's other items and UAT feel solid enough.
 
 ---
 
@@ -1173,28 +1190,100 @@ This gives the team a useful portal while keeping the first release manageable.
 
 # 28. Future Features
 
-Potential future additions:
+Potential future additions, grouped into phases the same way as sections 1-8 — but unlike those,
+none of this is committed or scheduled. Grouping is by dependency and theme (what naturally builds
+on what already exists, and what would benefit from a piece built earlier in this list), not by
+priority. Treat the ordering as a reasonable default to reconsider once real usage tells us what
+actually matters, per section 39's guiding principle.
+
+## Phase 9 — Self-Service & Access Hardening
+
+Cross-cutting enhancements to what's already built (auth, HRIS) rather than new domains — the
+natural next step since nothing here needs a new subsystem.
+
+* [ ] Employee self-service (HRIS section 11 already lists this as a "future" HRIS feature)
+* [ ] MFA (flagged as optional in section 6 from the start)
+* [ ] Mobile-friendly/PWA support
+
+---
+
+## Phase 10 — Notifications & Communication
+
+Infrastructure phase: several later phases (Leave & Attendance approvals, Onboarding checklists)
+are more useful with a notification system already in place, so this comes before them rather than
+after.
+
+* [ ] Notifications (in-app)
+* [ ] Email notifications
+* [ ] Internal messaging
+* [ ] Calendar
+
+---
+
+## Phase 11 — Leave & Attendance
+
+Extends the HRIS module (Phase 4) with two closely-related employee-facing workflows. Benefits
+from Phase 10's notification system for approval flows.
 
 * [ ] Leave request system
 * [ ] Attendance management
-* [ ] Employee self-service
-* [ ] Payslip integration
+
+---
+
+## Phase 12 — Onboarding & Offboarding
+
+Builds directly on User Management (Phase 6) and Leave & Attendance (Phase 11) — an onboarding
+workflow is largely "create the account, assign the team, kick off day-one tasks," which already
+has most of its building blocks.
+
+* [ ] Onboarding workflows
+* [ ] Offboarding workflows
+
+---
+
+## Phase 13 — Performance & Quality
+
 * [ ] Performance dashboards
 * [ ] QA management
+
+---
+
+## Phase 14 — Training Management
+
 * [ ] Training management
+
+---
+
+## Phase 15 — Ticket/Request System
+
+A general-purpose request/approval engine. Worth designing with an eye toward whether it should
+have absorbed Leave requests (Phase 11) rather than that being a bespoke flow — reconsider at
+build time rather than committing now.
+
 * [ ] Ticket/request system
-* [ ] Internal messaging
-* [ ] Calendar
-* [ ] Notifications
-* [ ] Email notifications
-* [ ] Mobile-friendly/PWA support
-* [ ] MFA
+
+---
+
+## Phase 16 — Payslip Integration
+
+Depends on a third-party payroll provider's API — the most externally-dependent item on this list,
+likely the least under this project's own control in terms of timeline.
+
+* [ ] Payslip integration
+
+---
+
+## Phase 17 — Advanced Reporting & Analytics
+
+The most data-hungry phase — needs real accumulated usage to be worth building, and depends on
+whatever Weekly Reports becomes after its planned rework (flagged 2026-09-07: the current Phase 5
+implementation isn't what's actually needed and will get reworked as its own project). Design this
+phase after that rework lands, not before.
+
 * [ ] Advanced analytics
 * [ ] Automated scheduled reports
 * [ ] Client-specific dashboards
 * [ ] Workforce planning
-* [ ] Onboarding workflows
-* [ ] Offboarding workflows
 
 ---
 

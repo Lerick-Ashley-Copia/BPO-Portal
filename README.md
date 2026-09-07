@@ -13,6 +13,7 @@ Internal portal for the BPO team. See [bpo_plan.md](./bpo_plan.md) for the full 
 - **Backend** (`backend/`) — TypeScript serverless functions on Vercel, Prisma ORM
 - **Database** — PostgreSQL via Neon (provisioned through Vercel's marketplace)
 - **File storage** — Backblaze B2 (S3-compatible API — AWS S3 itself requires a credit card at signup, B2 doesn't)
+- **Email** — Gmail API via OAuth (account setup links, not a shared third-party sender)
 - **Auth** — JWT bearer tokens (frontend and backend run on different domains, so cookies aren't used)
 
 ## Repo layout
@@ -24,6 +25,17 @@ bpo_plan.md Full project plan
 ```
 
 `frontend/` and `backend/` are independent npm projects (not a workspace) so each deploys cleanly to its own host.
+
+## Environments
+
+Production and local development use **separate** Postgres databases and S3 buckets (set up in Phase 8) — local testing can no longer touch real data:
+
+| | Production/Preview | Development (local) |
+|---|---|---|
+| Database | Neon project `bpo-portal-...` (original) | Neon project `bpo-portal-dev` |
+| File storage | B2 bucket `bpo-portal-lerick-2026` | B2 bucket `bpo-portal-lerick-2026-dev` |
+
+Vercel keeps separate env var sets per environment (Production / Preview / Development) — see "Local development" below for pulling the development set.
 
 ## Local development
 
@@ -42,14 +54,19 @@ npm run dev   # http://localhost:4300
 
 ```bash
 cd backend
-cp .env.example .env   # fill in DATABASE_URL, JWT_SECRET, S3_* (ask for real values, or provision your own)
+npx vercel link                                  # first time only, links to the Vercel project
+npx vercel env pull .env.local --environment=development
+cp .env.local .env
+# then append ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_NAME to .env for the seed script
 npm install
-npm run prisma:migrate # creates tables from prisma/schema.prisma
-npm run prisma:seed    # creates the first admin user + sample data from ADMIN_EMAIL/ADMIN_PASSWORD
-npm run local           # http://localhost:4310 (via `vercel dev`)
+npm run prisma:migrate   # creates tables from prisma/schema.prisma
+npm run prisma:seed      # creates the first admin user + sample data
+npm run local             # http://localhost:4310 (via `vercel dev`)
 ```
 
 Fixed local ports (`4300` frontend, `4310` backend) are set with `strictPort` so a collision fails loudly instead of silently landing on a random port. The backend's dev script is named `local` rather than `dev` — Vercel CLI refuses to run if `package.json`'s `dev` script itself invokes `vercel dev` (a recursion guard).
+
+**Managing env vars**: use `npx vercel env add/rm/ls <NAME> <environment>` from `backend/`. ⚠️ Vars added through a Marketplace integration connection (Neon) are stored as one record spanning all three environments — `vercel env rm <NAME> development` on one of these deletes it from **all** environments, not just development. Vars added individually via `vercel env add` (JWT_SECRET, S3_*, GMAIL_*, CORS_ORIGIN, FRONTEND_URL) don't have this problem and can be removed per-environment safely. When in doubt, check with `vercel env ls` first — a var listed as one row spanning multiple environments is the risky kind.
 
 ## Deploying changes
 
@@ -58,6 +75,8 @@ Fixed local ports (`4300` frontend, `4310` backend) are set with `strictPort` so
 
 ## Status
 
-Phase 1 (foundation) and most of Phase 2 (authentication) are done — see `bpo_plan.md` section 26 for the full phase checklist. Dashboard, Announcements, and Benefits have real pages wired to the database; HRIS, Weekly Reports, and Documents are still placeholders (Phase 3 onward).
+All 8 phases in `bpo_plan.md` are done or substantially done, except:
+- **Custom domain** — skipped for now (needs a purchased domain)
+- **User acceptance testing** and **Production launch** — inherently yours to do, not something to automate
 
-One known simplification: dev/preview/production currently share the same Neon database and B2 bucket. Fine for now; worth splitting before real HR data goes in.
+See `bpo_plan.md` section 26 for the full phase-by-phase checklist, including known gaps and simplifications called out honestly as they were found (e.g. Neon's free-tier 6-hour backup window, base Employee role not yet seeing Weekly Reports).
