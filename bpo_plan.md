@@ -1226,6 +1226,19 @@ Extends the HRIS module (Phase 4) with two closely-related employee-facing workf
 from Phase 10's notification system for approval flows.
 
 * [ ] Leave request system
+  * Employee profile (Phase 4) tracks a paid-leave balance — **SIL (Service Incentive Leave)**,
+    the Philippine standard of 5 days/year for employees with 1+ year of service. Starting balance
+    and whether it's prorated/accrued over time: still open, decide at build time.
+  * Employee submits a leave request (dates + reason) from the app.
+  * HR is notified when a new request comes in — likely via the email infrastructure already
+    built for account setup (Phase 6), rather than a new in-app notification system, unless
+    Phase 10 (Notifications) has landed by then.
+  * HR/Admin can see pending requests and approve or reject them (same review pattern as Weekly
+    Reports' lifecycle in Phase 5).
+  * On approval, deduct from the employee's SIL balance. **Open question, decide at build time**:
+    deduct the actual number of days requested (e.g. a 3-day approved leave costs 3), or a flat 1
+    per approved request regardless of duration? The former matches how paid leave normally works;
+    confirm which one is actually wanted before building the schema/logic around it.
 * [ ] Attendance management
 
 ---
