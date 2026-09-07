@@ -15,6 +15,7 @@ function groupByCategory(benefits: Benefit[]): Map<string, Benefit[]> {
 }
 
 function CreateForm({ onCreated }: { onCreated: (b: Benefit) => void }) {
+  const { guardedAction } = useAuth()
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
@@ -22,27 +23,29 @@ function CreateForm({ onCreated }: { onCreated: (b: Benefit) => void }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setError(null)
-    setSubmitting(true)
-    try {
-      const created = await api.post<Benefit>('/benefits', {
-        title,
-        category,
-        description,
-        eligibility: eligibility || null,
-      })
-      onCreated(created)
-      setTitle('')
-      setCategory('')
-      setDescription('')
-      setEligibility('')
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create benefit')
-    } finally {
-      setSubmitting(false)
-    }
+    guardedAction(['hr', 'admin'], async () => {
+      setError(null)
+      setSubmitting(true)
+      try {
+        const created = await api.post<Benefit>('/benefits', {
+          title,
+          category,
+          description,
+          eligibility: eligibility || null,
+        })
+        onCreated(created)
+        setTitle('')
+        setCategory('')
+        setDescription('')
+        setEligibility('')
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not create benefit')
+      } finally {
+        setSubmitting(false)
+      }
+    })
   }
 
   return (
@@ -84,17 +87,20 @@ function BenefitCard({
 }) {
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { guardedAction } = useAuth()
 
-  async function remove() {
-    setDeleting(true)
-    setError(null)
-    try {
-      await api.delete(`/benefits/${benefit.id}`)
-      onDeleted(benefit.id)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not delete')
-      setDeleting(false)
-    }
+  function remove() {
+    guardedAction(['hr', 'admin'], async () => {
+      setDeleting(true)
+      setError(null)
+      try {
+        await api.delete(`/benefits/${benefit.id}`)
+        onDeleted(benefit.id)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not delete')
+        setDeleting(false)
+      }
+    })
   }
 
   return (

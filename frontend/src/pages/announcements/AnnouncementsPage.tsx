@@ -7,26 +7,29 @@ import type { Announcement } from './types'
 const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' })
 
 function CreateForm({ onCreated }: { onCreated: (a: Announcement) => void }) {
+  const { guardedAction } = useAuth()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [published, setPublished] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setError(null)
-    setSubmitting(true)
-    try {
-      const created = await api.post<Announcement>('/announcements', { title, content, published })
-      onCreated(created)
-      setTitle('')
-      setContent('')
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create announcement')
-    } finally {
-      setSubmitting(false)
-    }
+    guardedAction(['hr', 'admin'], async () => {
+      setError(null)
+      setSubmitting(true)
+      try {
+        const created = await api.post<Announcement>('/announcements', { title, content, published })
+        onCreated(created)
+        setTitle('')
+        setContent('')
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not create announcement')
+      } finally {
+        setSubmitting(false)
+      }
+    })
   }
 
   return (
@@ -84,31 +87,36 @@ function AnnouncementItem({
   const [content, setContent] = useState(announcement.content)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { guardedAction } = useAuth()
 
-  async function save() {
-    setSaving(true)
-    setError(null)
-    try {
-      const updated = await api.put<Announcement>(`/announcements/${announcement.id}`, { title, content })
-      onUpdated(updated)
-      setEditing(false)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not save')
-    } finally {
-      setSaving(false)
-    }
+  function save() {
+    guardedAction(['hr', 'admin'], async () => {
+      setSaving(true)
+      setError(null)
+      try {
+        const updated = await api.put<Announcement>(`/announcements/${announcement.id}`, { title, content })
+        onUpdated(updated)
+        setEditing(false)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not save')
+      } finally {
+        setSaving(false)
+      }
+    })
   }
 
-  async function remove() {
-    setSaving(true)
-    setError(null)
-    try {
-      await api.delete(`/announcements/${announcement.id}`)
-      onDeleted(announcement.id)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not delete')
-      setSaving(false)
-    }
+  function remove() {
+    guardedAction(['hr', 'admin'], async () => {
+      setSaving(true)
+      setError(null)
+      try {
+        await api.delete(`/announcements/${announcement.id}`)
+        onDeleted(announcement.id)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not delete')
+        setSaving(false)
+      }
+    })
   }
 
   if (editing) {

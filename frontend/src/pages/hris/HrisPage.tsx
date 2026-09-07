@@ -76,26 +76,29 @@ function EmployeeRow({
   const [status, setStatus] = useState(employee.status)
   const [departmentId, setDepartmentId] = useState(employee.departmentId ?? '')
   const [teamId, setTeamId] = useState(employee.teamId ?? '')
+  const { guardedAction } = useAuth()
 
   const teamsInDepartment = teams.filter((t) => t.departmentId === departmentId)
 
-  async function save() {
-    setSaving(true)
-    setError(null)
-    try {
-      const updated = await api.put<EmployeeRecord>(`/employees/${employee.id}`, {
-        position,
-        status,
-        departmentId: departmentId || null,
-        teamId: teamId || null,
-      })
-      onSaved(updated)
-      setEditing(false)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not save changes')
-    } finally {
-      setSaving(false)
-    }
+  function save() {
+    guardedAction(['hr', 'admin'], async () => {
+      setSaving(true)
+      setError(null)
+      try {
+        const updated = await api.put<EmployeeRecord>(`/employees/${employee.id}`, {
+          position,
+          status,
+          departmentId: departmentId || null,
+          teamId: teamId || null,
+        })
+        onSaved(updated)
+        setEditing(false)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not save changes')
+      } finally {
+        setSaving(false)
+      }
+    })
   }
 
   if (!editing) {
@@ -212,29 +215,32 @@ function CreateTeamOrDepartment({
   const [departmentId, setDepartmentId] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { guardedAction } = useAuth()
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     if (kind === 'team' && !departmentId) {
       setError('Choose a department for the new team')
       return
     }
-    setSubmitting(true)
-    try {
-      if (kind === 'department') {
-        const dept = await api.post<Department>('/directory', { kind: 'department', name })
-        onCreated({ department: dept })
-      } else {
-        const team = await api.post<Team>('/directory', { kind: 'team', name, departmentId })
-        onCreated({ team })
+    guardedAction(['admin'], async () => {
+      setSubmitting(true)
+      try {
+        if (kind === 'department') {
+          const dept = await api.post<Department>('/directory', { kind: 'department', name })
+          onCreated({ department: dept })
+        } else {
+          const team = await api.post<Team>('/directory', { kind: 'team', name, departmentId })
+          onCreated({ team })
+        }
+        setName('')
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not create')
+      } finally {
+        setSubmitting(false)
       }
-      setName('')
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create')
-    } finally {
-      setSubmitting(false)
-    }
+    })
   }
 
   return (

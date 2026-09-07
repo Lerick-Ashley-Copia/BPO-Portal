@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useAuth } from '../../auth/AuthContext'
 import type { Role } from '../../auth/types'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
@@ -30,6 +31,7 @@ function RoleCheckboxes({
 }
 
 function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void }) {
+  const { guardedAction } = useAuth()
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [roles, setRoles] = useState<Role[]>(['employee'])
@@ -37,7 +39,7 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     setSuccess(null)
@@ -47,22 +49,24 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
       return
     }
 
-    setSubmitting(true)
-    try {
-      const created = await api.post<{ id: string; email: string; name: string; roles: Role[] }>(
-        '/users',
-        { email, name, roles },
-      )
-      onCreated({ ...created, passwordSet: false, createdAt: new Date().toISOString() })
-      setSuccess(`Account created — a setup link was emailed to ${created.email}.`)
-      setEmail('')
-      setName('')
-      setRoles(['employee'])
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create the account')
-    } finally {
-      setSubmitting(false)
-    }
+    guardedAction(['admin'], async () => {
+      setSubmitting(true)
+      try {
+        const created = await api.post<{ id: string; email: string; name: string; roles: Role[] }>(
+          '/users',
+          { email, name, roles },
+        )
+        onCreated({ ...created, passwordSet: false, createdAt: new Date().toISOString() })
+        setSuccess(`Account created — a setup link was emailed to ${created.email}.`)
+        setEmail('')
+        setName('')
+        setRoles(['employee'])
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not create the account')
+      } finally {
+        setSubmitting(false)
+      }
+    })
   }
 
   return (
@@ -116,18 +120,21 @@ function UserRow({ user, onSaved }: { user: ManagedUser; onSaved: (user: Managed
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const dirty = JSON.stringify([...roles].sort()) !== JSON.stringify([...user.roles].sort())
+  const { guardedAction } = useAuth()
 
-  async function save() {
-    setSaving(true)
-    setError(null)
-    try {
-      const updated = await api.put<ManagedUser>(`/users/${user.id}`, { roles })
-      onSaved(updated)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not save roles')
-    } finally {
-      setSaving(false)
-    }
+  function save() {
+    guardedAction(['admin'], async () => {
+      setSaving(true)
+      setError(null)
+      try {
+        const updated = await api.put<ManagedUser>(`/users/${user.id}`, { roles })
+        onSaved(updated)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not save roles')
+      } finally {
+        setSaving(false)
+      }
+    })
   }
 
   return (

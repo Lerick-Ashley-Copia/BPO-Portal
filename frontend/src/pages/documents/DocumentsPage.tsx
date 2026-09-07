@@ -29,6 +29,7 @@ function readFileAsBase64(file: File): Promise<string> {
 const ROLES = ['employee', 'team_leader', 'manager', 'hr', 'admin']
 
 function UploadForm({ onUploaded }: { onUploaded: (d: Document) => void }) {
+  const { guardedAction } = useAuth()
   const [title, setTitle] = useState('')
   const [categoryName, setCategoryName] = useState('')
   const [accessLevel, setAccessLevel] = useState('employee')
@@ -36,7 +37,7 @@ function UploadForm({ onUploaded }: { onUploaded: (d: Document) => void }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     if (!file) {
@@ -48,26 +49,28 @@ function UploadForm({ onUploaded }: { onUploaded: (d: Document) => void }) {
       return
     }
 
-    setUploading(true)
-    try {
-      const fileBase64 = await readFileAsBase64(file)
-      const uploaded = await api.post<Document>('/documents', {
-        title,
-        categoryName,
-        accessLevel,
-        contentType: file.type || 'application/octet-stream',
-        fileName: file.name,
-        fileBase64,
-      })
-      onUploaded(uploaded)
-      setTitle('')
-      setCategoryName('')
-      setFile(null)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not upload document')
-    } finally {
-      setUploading(false)
-    }
+    guardedAction(['hr', 'admin'], async () => {
+      setUploading(true)
+      try {
+        const fileBase64 = await readFileAsBase64(file)
+        const uploaded = await api.post<Document>('/documents', {
+          title,
+          categoryName,
+          accessLevel,
+          contentType: file.type || 'application/octet-stream',
+          fileName: file.name,
+          fileBase64,
+        })
+        onUploaded(uploaded)
+        setTitle('')
+        setCategoryName('')
+        setFile(null)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not upload document')
+      } finally {
+        setUploading(false)
+      }
+    })
   }
 
   return (

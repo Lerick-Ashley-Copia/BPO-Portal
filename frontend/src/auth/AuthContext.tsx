@@ -1,6 +1,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api, ApiError } from '../services/api'
-import type { AuthUser } from './types'
+import type { AuthUser, Role } from './types'
+
+interface PendingAction {
+  requiredRoles: Role[]
+  run: () => void
+}
 
 interface AuthContextValue {
   user: AuthUser | null
@@ -8,13 +13,27 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   setSession: (token: string, user: AuthUser) => void
+  viewAsRole: Role | null
+  setViewAsRole: (role: Role | null) => void
+  effectiveRoles: Role[]
+  guardedAction: (requiredRoles: Role[], run: () => void) => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
+const roleLabels: Record<Role, string> = {
+  employee: 'Employee',
+  team_leader: 'Team Leader',
+  manager: 'Manager',
+  hr: 'HR',
+  admin: 'Administrator',
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [viewAsRole, setViewAsRole] = useState<Role | null>(null)
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('bpo_token')
@@ -42,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     localStorage.removeItem('bpo_token')
     setUser(null)
+    setViewAsRole(null)
   }
 
   function setSession(token: string, sessionUser: AuthUser) {
@@ -49,9 +69,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(sessionUser)
   }
 
+  // Only real admins can simulate a role — otherwise a simulated
+  // "employee" could simulate their way back to admin.
+  const canSimulate = user?.roles.includes('admin') ?? false
+  const effectiveRoles = canSimulate && viewAsRole ? [viewAsRole] : (user?.roles ?? [])
+
+  // The backend always enforces permissions off the real JWT, so
+  // view-as-role is a UI-only preview — guardedAction is what makes
+  // that preview meaningful: an action the simulated role couldn't
+  // really do still pauses for confirmation instead of silently
+  // succeeding through the real admin token underneath it.
+  function guardedAction(requiredRoles: Role[], run: () => void) {
+    const allowedForReal = user?.roles.some((r) => requiredRoles.includes(r)) ?? false
+    const allowedForSimulated = requiredRoles.length === 0 || requiredRoles.some((r) => effectiveRoles.includes(r))
+
+    if (allowedForSimulated || !allowedForReal) {
+      run()
+      return
+    }
+
+    setPendingAction({ requiredRoles, run })
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, setSession }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, logout, setSession, viewAsRole, setViewAsRole, effectiveRoles, guardedAction }}
+    >
       {children}
+
+      {pendingAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-lg dark:bg-gray-900">
+            <h2 className="font-semibold">Action not allowed for this role</h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              The role you're viewing as ({viewAsRole ? roleLabels[viewAsRole] : ''}) can't do this.
+              You're really an Administrator — proceed anyway?
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setPendingAction(null)}
+                className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  pendingAction.run()
+                  setPendingAction(null)
+                }}
+                className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Proceed as Admin
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AuthContext.Provider>
   )
 }
