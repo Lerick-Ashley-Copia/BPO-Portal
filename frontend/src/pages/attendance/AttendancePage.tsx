@@ -3,23 +3,18 @@ import { useAuth } from '../../auth/AuthContext'
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState'
 import { useApiData } from '../../hooks/useApiData'
 import { api, ApiError } from '../../services/api'
-import { formatDateOnly } from '../../utils/dates'
+import { formatDateOnly, todayInManilaIso } from '../../utils/dates'
 import type { AttendanceRecord } from './types'
 
 const timeFmt = (d: string | null) =>
   d ? new Date(d).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '—'
 
-function todayIso() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 export function AttendancePage() {
   const { effectiveRoles } = useAuth()
   const isReviewer = effectiveRoles.some((r) => r === 'hr' || r === 'admin')
 
-  const [from, setFrom] = useState(todayIso())
-  const [to, setTo] = useState(todayIso())
+  const [from, setFrom] = useState(todayInManilaIso())
+  const [to, setTo] = useState(todayInManilaIso())
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
 
@@ -71,7 +66,7 @@ export function AttendancePage() {
         </label>
         <button
           onClick={() => {
-            const t = todayIso()
+            const t = todayInManilaIso()
             setFrom(t)
             setTo(t)
           }}

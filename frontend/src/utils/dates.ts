@@ -13,3 +13,15 @@ export function formatDateOnly(value: string | Date): string {
     timeZone: 'UTC',
   })
 }
+
+const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000
+
+// Attendance records are keyed off Manila's calendar day (see backend's
+// todayInManila()), not the viewer's local day — a viewer west of
+// Manila whose local clock hasn't crossed midnight there yet would
+// otherwise default to a day the attendance system doesn't recognize
+// as "today" yet, and see an empty range.
+export function todayInManilaIso(): string {
+  const manila = new Date(Date.now() + MANILA_OFFSET_MS)
+  return `${manila.getUTCFullYear()}-${String(manila.getUTCMonth() + 1).padStart(2, '0')}-${String(manila.getUTCDate()).padStart(2, '0')}`
+}
