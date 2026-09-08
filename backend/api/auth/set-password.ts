@@ -1,16 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { randomBytes } from 'node:crypto'
 import { z } from 'zod'
+import type { User } from '@prisma/client'
 import { prisma } from '../../lib/prisma.js'
-import { hashPassword, signToken } from '../../lib/auth.js'
+import { hashPassword, signToken, verifyToken } from '../../lib/auth.js'
 import { sendEmail } from '../../lib/email.js'
+import { logAudit } from '../../lib/audit.js'
 import { withCors } from '../../lib/middleware.js'
 import { formatDisplayName } from '../../lib/names.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
-// functions per deployment): POST /auth/set-password (consume a token) and
-// POST /auth/forgot-password (request a reset link) share this file, the
-// latter routed here via a vercel.json rewrite arriving as ?action=forgot.
+// functions per deployment): POST /auth/set-password (consume a token),
+// POST /auth/forgot-password (self-service: request a reset link) and
+// POST /auth/admin-reset-password (admin-triggered, for a user who can't
+// use the self-service flow) share this file, the latter two routed here
+// via vercel.json rewrites arriving as ?action=forgot / ?action=admin-reset.
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000 // 1 hour
 
@@ -23,10 +27,32 @@ const forgotPasswordSchema = z.object({
   email: z.string().email(),
 })
 
+const adminResetSchema = z.object({
+  userId: z.string().min(1),
+})
+
 function requireEnv(name: string): string {
   const value = process.env[name]
   if (!value) throw new Error(`${name} is not configured`)
   return value
+}
+
+async function createAndSendResetLink(user: Pick<User, 'id' | 'email' | 'firstName'>) {
+  const token = randomBytes(32).toString('base64url')
+  await prisma.passwordResetToken.create({
+    data: { userId: user.id, token, expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS) },
+  })
+
+  const resetUrl = `${requireEnv('FRONTEND_URL')}/set-password?token=${token}`
+
+  await sendEmail(
+    user.email,
+    'Reset your BPO Portal password',
+    `<p>Hi ${user.firstName},</p>
+     <p>We received a request to reset your BPO Portal password.</p>
+     <p><a href="${resetUrl}">Click here to choose a new password</a>. This link expires in 1 hour.</p>
+     <p>If you didn't request this, you can ignore this email — your password won't change.</p>`,
+  )
 }
 
 async function handleForgotPassword(req: VercelRequest, res: VercelResponse) {
@@ -36,30 +62,53 @@ async function handleForgotPassword(req: VercelRequest, res: VercelResponse) {
     return
   }
 
-  const { email } = parsed.data
-  const user = await prisma.user.findUnique({ where: { email } })
-
+  const user = await prisma.user.findUnique({ where: { email: parsed.data.email } })
   if (user) {
-    const token = randomBytes(32).toString('base64url')
-    await prisma.passwordResetToken.create({
-      data: { userId: user.id, token, expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS) },
-    })
-
-    const resetUrl = `${requireEnv('FRONTEND_URL')}/set-password?token=${token}`
-
-    await sendEmail(
-      email,
-      'Reset your BPO Portal password',
-      `<p>Hi ${user.firstName},</p>
-       <p>We received a request to reset your BPO Portal password.</p>
-       <p><a href="${resetUrl}">Click here to choose a new password</a>. This link expires in 1 hour.</p>
-       <p>If you didn't request this, you can ignore this email — your password won't change.</p>`,
-    )
+    await createAndSendResetLink(user)
   }
 
   // Same response whether or not the email is registered, so this
   // endpoint can't be used to enumerate accounts.
   res.status(200).json({ message: 'If that email is registered, a reset link is on its way.' })
+}
+
+async function handleAdminResetPassword(req: VercelRequest, res: VercelResponse) {
+  const header = req.headers.authorization
+  const bearer = header?.startsWith('Bearer ') ? header.slice(7) : undefined
+  if (!bearer) {
+    res.status(401).json({ message: 'Missing authorization token' })
+    return
+  }
+
+  let auth
+  try {
+    auth = verifyToken(bearer)
+  } catch {
+    res.status(401).json({ message: 'Invalid or expired token' })
+    return
+  }
+
+  if (!auth.roles.includes('admin')) {
+    res.status(403).json({ message: 'Admin access required' })
+    return
+  }
+
+  const parsed = adminResetSchema.safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ message: 'Invalid request' })
+    return
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: parsed.data.userId } })
+  if (!user) {
+    res.status(404).json({ message: 'User not found' })
+    return
+  }
+
+  await createAndSendResetLink(user)
+  await logAudit(auth.sub, 'reset-password', 'user', user.id)
+
+  res.status(200).json({ message: `Reset link sent to ${user.email}` })
 }
 
 async function handleSetPassword(req: VercelRequest, res: VercelResponse) {
@@ -120,6 +169,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.query.action === 'forgot') {
     await handleForgotPassword(req, res)
+  } else if (req.query.action === 'admin-reset') {
+    await handleAdminResetPassword(req, res)
   } else {
     await handleSetPassword(req, res)
   }

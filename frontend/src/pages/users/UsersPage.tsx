@@ -154,6 +154,28 @@ function UserRow({ user, onSaved }: { user: ManagedUser; onSaved: (user: Managed
   const [roles, setRoles] = useState<Role[]>(user.roles)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [sendingReset, setSendingReset] = useState(false)
+  const [resetMessage, setResetMessage] = useState<string | null>(null)
+  const [resetError, setResetError] = useState<string | null>(null)
+
+  function sendResetLink() {
+    setResetError(null)
+    setResetMessage(null)
+
+    guardedAction(['admin'], async () => {
+      setSendingReset(true)
+      try {
+        const { message } = await api.post<{ message: string }>('/auth/admin-reset-password', {
+          userId: user.id,
+        })
+        setResetMessage(message)
+      } catch (err) {
+        setResetError(err instanceof ApiError ? err.message : 'Could not send the reset link')
+      } finally {
+        setSendingReset(false)
+      }
+    })
+  }
 
   const nameDirty =
     firstName !== user.firstName || lastName !== user.lastName || middleName !== (user.middleName ?? '')
@@ -219,12 +241,23 @@ function UserRow({ user, onSaved }: { user: ManagedUser; onSaved: (user: Managed
         </td>
         <td className="py-2 pr-4 text-sm text-gray-600 dark:text-gray-400">{user.roles.join(', ')}</td>
         <td className="py-2">
-          <button
-            onClick={startEditing}
-            className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-          >
-            Edit
-          </button>
+          <div className="flex gap-1">
+            <button
+              onClick={startEditing}
+              className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+            >
+              Edit
+            </button>
+            <button
+              onClick={sendResetLink}
+              disabled={sendingReset}
+              className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+            >
+              {sendingReset ? 'Sending…' : 'Send reset link'}
+            </button>
+          </div>
+          {resetMessage && <p className="mt-1 text-xs text-green-700 dark:text-green-500">{resetMessage}</p>}
+          {resetError && <p className="mt-1 text-xs text-red-600">{resetError}</p>}
         </td>
       </tr>
     )
