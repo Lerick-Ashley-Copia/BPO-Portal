@@ -107,14 +107,21 @@ model LeaveRequest {
   @@map("leave_requests")
 }
 
+enum AttendanceStatus {
+  present
+  absent
+}
+
 model AttendanceRecord {
-  id         String    @id @default(uuid())
-  employee   Employee  @relation(fields: [employeeId], references: [id])
+  id         String           @id @default(uuid())
+  employee   Employee         @relation(fields: [employeeId], references: [id])
   employeeId String
-  date       DateTime  // the calendar day this record is for, normalized to midnight Asia/Manila
-  checkInAt  DateTime
+  date       DateTime         // the calendar day this record is for, normalized to midnight Asia/Manila
+  status     AttendanceStatus @default(present)
+  checkInAt  DateTime?        // null for a record HR marked absent
   checkOutAt DateTime?
-  createdAt  DateTime  @default(now())
+  markedBy   String?          // userId of the HR/admin who marked this absent, if applicable
+  createdAt  DateTime         @default(now())
 
   @@unique([employeeId, date])
   @@map("attendance_records")

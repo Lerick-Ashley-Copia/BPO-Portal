@@ -11,6 +11,13 @@ export function todayInManila(): Date {
   return new Date(Date.UTC(manila.getUTCFullYear(), manila.getUTCMonth(), manila.getUTCDate()))
 }
 
+// Minutes since midnight, Manila wall-clock time — used to gate
+// check-in to business hours (see handleCheckIn in api/leave.ts).
+export function minutesIntoManilaDay(): number {
+  const manila = new Date(Date.now() + MANILA_OFFSET_MS)
+  return manila.getUTCHours() * 60 + manila.getUTCMinutes()
+}
+
 export function inclusiveDayCount(start: Date, end: Date): number {
   const msPerDay = 24 * 60 * 60 * 1000
   const startDay = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate())

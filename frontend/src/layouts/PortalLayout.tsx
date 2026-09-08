@@ -66,7 +66,7 @@ function CheckOutButton() {
     }
   }
 
-  if (!attendanceStatus?.checkedIn || attendanceStatus.checkedOut) return null
+  if (!attendanceStatus?.checkedIn || attendanceStatus.checkedOut || attendanceStatus.status === 'absent') return null
 
   return (
     <button

@@ -10,6 +10,7 @@ interface PendingAction {
 export interface AttendanceStatus {
   checkedIn: boolean
   checkedOut: boolean
+  status: 'present' | 'absent' | null
   checkInAt: string | null
   checkOutAt: string | null
 }

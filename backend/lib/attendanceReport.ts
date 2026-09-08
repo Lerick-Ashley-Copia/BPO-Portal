@@ -3,7 +3,8 @@ import ExcelJS from 'exceljs'
 export interface AttendanceReportRow {
   date: Date
   employeeName: string
-  checkInAt: Date
+  status: 'present' | 'absent'
+  checkInAt: Date | null
   checkOutAt: Date | null
 }
 
@@ -44,7 +45,11 @@ export async function buildAttendanceXlsx(rows: AttendanceReportRow[]): Promise<
       columnHeaderRow.font = { bold: true, size: 10 }
     }
 
-    sheet.addRow([row.employeeName, timeFmt(row.checkInAt), timeFmt(row.checkOutAt)])
+    if (row.status === 'absent') {
+      sheet.addRow([row.employeeName, 'Absent', '—'])
+    } else {
+      sheet.addRow([row.employeeName, timeFmt(row.checkInAt), timeFmt(row.checkOutAt)])
+    }
   }
 
   if (rows.length === 0) {
