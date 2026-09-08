@@ -8,6 +8,7 @@ import { AuditLogsPage } from './pages/audit-logs/AuditLogsPage'
 import { BenefitsPage } from './pages/benefits/BenefitsPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { DocumentsPage } from './pages/documents/DocumentsPage'
+import { ForgotPasswordPage } from './pages/forgot-password/ForgotPasswordPage'
 import { HrisPage } from './pages/hris/HrisPage'
 import { LeaveRequestsPage } from './pages/leave/LeaveRequestsPage'
 import { LoginPage } from './pages/login/LoginPage'
@@ -21,6 +22,7 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/set-password" element={<SetPasswordPage />} />
           <Route
             element={

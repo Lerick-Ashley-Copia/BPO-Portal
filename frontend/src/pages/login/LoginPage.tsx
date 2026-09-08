@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, useAuth } from '../../auth/AuthContext'
 
 export function LoginPage() {
@@ -59,6 +59,11 @@ export function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded border border-gray-300 px-3 py-2"
           />
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button

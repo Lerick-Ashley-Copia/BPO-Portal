@@ -7,6 +7,7 @@
     }
   },
   "rewrites": [
+    { "source": "/api/auth/forgot-password", "destination": "/api/auth/set-password?action=forgot" },
     { "source": "/api/employees/me", "destination": "/api/employees?sub=me" },
     { "source": "/api/employees/:id", "destination": "/api/employees?sub=:id" },
     { "source": "/api/users/:id", "destination": "/api/users?sub=:id" },
