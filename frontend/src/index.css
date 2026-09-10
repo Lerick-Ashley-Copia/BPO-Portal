@@ -102,6 +102,17 @@ body {
   select {
     color-scheme: light;
   }
+
+  /* color-scheme alone fixed the popup's background but NOT this: an
+     <option> inherits `color` from its <select>, and in dark mode
+     .field sets that to a light gray meant for the closed control's
+     dark background — so once the popup forced a white background,
+     that same light gray text became nearly invisible against it.
+     Options need their own explicit dark, readable color regardless
+     of what the select itself is styled as. */
+  select option {
+    color: #111827 !important;
+  }
 }
 
 @layer components {
