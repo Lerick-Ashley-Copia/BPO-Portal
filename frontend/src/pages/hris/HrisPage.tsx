@@ -86,11 +86,18 @@ function EmployeeRow({
   const [departmentId, setDepartmentId] = useState(employee.departmentId ?? '')
   const [teamId, setTeamId] = useState(employee.teamId ?? '')
   const [dateHired, setDateHired] = useState(employee.dateHired ? employee.dateHired.slice(0, 10) : '')
+  const [silBalance, setSilBalance] = useState(String(employee.silBalance))
   const { guardedAction } = useAuth()
 
   const teamsInDepartment = teams.filter((t) => t.departmentId === departmentId)
 
   function save() {
+    const parsedSil = Number(silBalance)
+    if (!Number.isInteger(parsedSil) || parsedSil < 0) {
+      setError('SIL balance must be a whole number, 0 or more')
+      return
+    }
+
     guardedAction(['hr', 'admin'], async () => {
       setSaving(true)
       setError(null)
@@ -101,6 +108,7 @@ function EmployeeRow({
           departmentId: departmentId || null,
           teamId: teamId || null,
           dateHired: dateHired || null,
+          silBalance: parsedSil,
         })
         onSaved(updated)
         setEditing(false)
@@ -126,7 +134,9 @@ function EmployeeRow({
         <td className="py-2.5 pr-4">
           {employee.dateHired ? dateFormatter.format(new Date(employee.dateHired)) : '—'}
         </td>
-        <SilBalanceCell employee={employee} onSaved={onSaved} />
+        <td className="py-2.5 pr-4">
+          {employee.silBalance} day{employee.silBalance === 1 ? '' : 's'}
+        </td>
         <td className="py-2.5 pr-4">
           <Button size="sm" onClick={() => setEditing(true)}>
             Edit
@@ -189,7 +199,16 @@ function EmployeeRow({
           className="field py-1"
         />
       </td>
-      <SilBalanceCell employee={employee} onSaved={onSaved} />
+      <td className="py-2.5 pr-4 align-top">
+        <input
+          type="number"
+          min={0}
+          step={1}
+          value={silBalance}
+          onChange={(e) => setSilBalance(e.target.value)}
+          className="field w-20 py-1"
+        />
+      </td>
       <td className="py-2.5 pr-4 align-top">
         <div className="flex flex-col gap-1">
           <Button size="sm" variant="primary" onClick={save} disabled={saving}>
@@ -202,64 +221,6 @@ function EmployeeRow({
         </div>
       </td>
     </tr>
-  )
-}
-
-// Deliberately kept out of the regular position/department/team/status
-// edit form — a leave-balance correction is a different, more
-// sensitive kind of edit ("just in case" territory), so it's its own
-// standalone number field rather than sitting next to routine fields
-// where it'd be easy to change by accident. Saves on blur.
-function SilBalanceCell({
-  employee,
-  onSaved,
-}: {
-  employee: EmployeeRecord
-  onSaved: (updated: EmployeeRecord) => void
-}) {
-  const { guardedAction } = useAuth()
-  const [value, setValue] = useState(String(employee.silBalance))
-  const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    setValue(String(employee.silBalance))
-  }, [employee.silBalance])
-
-  function commit() {
-    const parsed = Number(value)
-    if (!Number.isInteger(parsed) || parsed < 0) {
-      setValue(String(employee.silBalance))
-      return
-    }
-    if (parsed === employee.silBalance) return
-
-    guardedAction(['hr', 'admin'], async () => {
-      setSaving(true)
-      try {
-        const updated = await api.put<EmployeeRecord>(`/employees/${employee.id}`, { silBalance: parsed })
-        onSaved(updated)
-      } catch (err) {
-        alert(err instanceof ApiError ? err.message : 'Could not update SIL balance')
-        setValue(String(employee.silBalance))
-      } finally {
-        setSaving(false)
-      }
-    })
-  }
-
-  return (
-    <td className="py-2.5 pr-4 align-top">
-      <input
-        type="number"
-        min={0}
-        step={1}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={commit}
-        disabled={saving}
-        className="field w-20 py-1"
-      />
-    </td>
   )
 }
 
@@ -392,9 +353,7 @@ function EmployeeDirectory() {
                 <th className="py-3 pr-4 font-medium">Team</th>
                 <th className="py-3 pr-4 font-medium">Status</th>
                 <th className="py-3 pr-4 font-medium">Date Hired</th>
-                <th className="py-3 pr-4 font-medium" title="Right-click a value to edit">
-                  SIL Balance
-                </th>
+                <th className="py-3 pr-4 font-medium">SIL Balance</th>
                 <th className="py-3 pr-4 font-medium">Actions</th>
               </tr>
             </thead>
