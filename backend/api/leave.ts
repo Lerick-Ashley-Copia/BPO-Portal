@@ -210,6 +210,10 @@ async function handleListAttendance(req: AuthedRequest, res: VercelResponse) {
   res.status(200).json(
     records.map((r) => ({
       id: r.id,
+      // Only useful to a reviewer (to act on the row — e.g. mark absent)
+      // and not otherwise sensitive, but no reason to hand it to a
+      // non-reviewer viewing their own history.
+      employeeId: reviewer ? r.employeeId : undefined,
       employeeName: formatDisplayName(r.employee.user.firstName, r.employee.user.middleName, r.employee.user.lastName),
       date: r.date,
       status: r.status,

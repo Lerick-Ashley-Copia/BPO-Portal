@@ -12,6 +12,11 @@ import type { AttendanceRecord } from './types'
 
 const timeFmt = formatManilaTime
 
+// For a day that already has a row in the table below, marking absent
+// is a row action (it already shows the exact employee + date — no
+// need to re-pick either). This form is only for the case a row
+// action can't cover: a day with no attendance record at all yet, so
+// there's nothing on screen to attach the action to.
 function MarkAbsentForm({ onMarked }: { onMarked: () => void }) {
   const { guardedAction } = useAuth()
   const { data: employees } = useApiData<EmployeeRecord[]>('/employees')
@@ -63,11 +68,42 @@ function MarkAbsentForm({ onMarked }: { onMarked: () => void }) {
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="field mt-1" />
       </label>
       <Button type="submit" size="sm" disabled={submitting}>
-        {submitting ? 'Marking…' : 'Mark Absent'}
+        {submitting ? 'Marking…' : 'Mark Absent (no record yet)'}
       </Button>
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       {success && <p className="text-sm text-brand-700 dark:text-brand-400">{success}</p>}
     </CardForm>
+  )
+}
+
+function MarkAbsentRowButton({ record, onMarked }: { record: AttendanceRecord; onMarked: () => void }) {
+  const { guardedAction } = useAuth()
+  const [submitting, setSubmitting] = useState(false)
+
+  function handleClick() {
+    if (!record.employeeId) return
+    if (!window.confirm(`Mark ${record.employeeName} absent on ${formatDateOnly(record.date)}?`)) return
+
+    guardedAction(['hr', 'admin'], async () => {
+      setSubmitting(true)
+      try {
+        await api.post('/leave/attendance/mark-absent', {
+          employeeId: record.employeeId,
+          date: record.date.slice(0, 10),
+        })
+        onMarked()
+      } catch (err) {
+        alert(err instanceof ApiError ? err.message : 'Could not mark absent')
+      } finally {
+        setSubmitting(false)
+      }
+    })
+  }
+
+  return (
+    <Button size="sm" onClick={handleClick} disabled={submitting || !record.employeeId}>
+      {submitting ? 'Marking…' : 'Mark Absent'}
+    </Button>
   )
 }
 
@@ -173,6 +209,7 @@ export function AttendancePage() {
                 <th className="py-3 pr-4 font-medium">Check In</th>
                 <th className="py-3 pr-4 font-medium">Check Out</th>
                 {isReviewer && <th className="py-3 pr-4 font-medium">Check-in IP</th>}
+                {isReviewer && <th className="py-3 pr-4 font-medium">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -184,9 +221,12 @@ export function AttendancePage() {
                   {isReviewer && <td className="py-2.5 pl-4 pr-4">{r.employeeName}</td>}
                   <td className="py-2.5 pl-4 pr-4">{formatDateOnly(r.date)}</td>
                   {r.status === 'absent' ? (
-                    <td colSpan={isReviewer ? 3 : 2} className="py-2.5 pr-4 text-amber-700 dark:text-amber-500">
-                      Absent
-                    </td>
+                    <>
+                      <td colSpan={isReviewer ? 3 : 2} className="py-2.5 pr-4 text-amber-700 dark:text-amber-500">
+                        Absent
+                      </td>
+                      {isReviewer && <td className="py-2.5 pr-4">—</td>}
+                    </>
                   ) : (
                     <>
                       <td className="py-2.5 pr-4">{timeFmt(r.checkInAt)}</td>
@@ -195,6 +235,11 @@ export function AttendancePage() {
                         <td className={`py-2.5 pr-4 ${r.checkInOffSite ? 'text-amber-700 dark:text-amber-500' : ''}`}>
                           {r.checkInIp ?? '—'}
                           {r.checkInOffSite && <span className="ml-1 text-xs">(off-site)</span>}
+                        </td>
+                      )}
+                      {isReviewer && (
+                        <td className="py-2.5 pr-4">
+                          <MarkAbsentRowButton record={r} onMarked={() => setReloadToken((t) => t + 1)} />
                         </td>
                       )}
                     </>
