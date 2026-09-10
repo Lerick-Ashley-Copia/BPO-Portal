@@ -87,7 +87,7 @@ export function PortalLayout() {
       <header className="sticky top-0 z-40 border-b border-black/5 bg-white/75 backdrop-blur-md dark:border-white/10 dark:bg-brand-950/75">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
           <div className="flex min-w-0 shrink-0 items-center gap-2">
-            <img src="/favicon.png" alt="" className="h-7 w-7 shrink-0" />
+            <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="" className="h-7 w-7 shrink-0" />
             <span className="min-w-0 truncate text-lg font-bold tracking-tight text-gray-900 dark:text-white">
               BPO Portal
             </span>

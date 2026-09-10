@@ -32,7 +32,7 @@ export function ForgotPasswordPage() {
     <div className="flex min-h-svh items-center justify-center px-4">
       <Card className="w-full max-w-sm !p-8 shadow-xl">
         <div className="mb-6 flex flex-col items-center text-center">
-          <img src="/favicon.png" alt="" className="h-12 w-12" />
+          <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="" className="h-12 w-12" />
           <h1 className="mt-3 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
             Reset your password
           </h1>
