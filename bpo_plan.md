@@ -1200,14 +1200,13 @@ on what already exists, and what would benefit from a piece built earlier in thi
 priority. Treat the ordering as a reasonable default to reconsider once real usage tells us what
 actually matters, per section 39's guiding principle.
 
-## Phase 9 — Self-Service & Access Hardening
+## Phase 9 — Self-Service & Mobile
 
-Cross-cutting enhancements to what's already built (auth, HRIS) rather than new domains — the
-natural next step since nothing here needs a new subsystem.
+Cross-cutting enhancements to what's already built (auth, HRIS, core portal UI) rather than new
+domains — the natural next step since nothing here needs a new subsystem.
 
-* [ ] Employee self-service (HRIS section 11 already lists this as a "future" HRIS feature)
-* [ ] MFA (flagged as optional in section 6 from the start)
 * [ ] Mobile-friendly/PWA support
+* [ ] Employee self-service (HRIS section 11 already lists this as a "future" HRIS feature)
 
 ---
 
@@ -1314,6 +1313,16 @@ phase after that rework lands, not before.
 * [ ] Automated scheduled reports
 * [ ] Client-specific dashboards
 * [ ] Workforce planning
+
+---
+
+## Phase 18 — MFA (maybe)
+
+Flagged as optional in section 6 from the start. Pushed to the very last phase — not committed;
+may end up skipped entirely if the other phases cover the real risk (device/session hygiene,
+short token lifetimes) well enough without it.
+
+* [ ] MFA
 
 ---
 
