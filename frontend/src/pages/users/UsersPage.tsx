@@ -105,13 +105,21 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
   }
 
   return (
-    <CardForm onSubmit={handleSubmit} className="space-y-4">
+    <CardForm onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <label htmlFor="new-email" className="text-sm text-gray-600 dark:text-gray-400">
             Email
           </label>
-          <input id="new-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="field" />
+          <input
+            id="new-email"
+            type="email"
+            required
+            autoComplete="off"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="field"
+          />
         </div>
         <div className="space-y-1">
           <label htmlFor="new-first-name" className="text-sm text-gray-600 dark:text-gray-400">
@@ -120,6 +128,7 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
           <input
             id="new-first-name"
             required
+            autoComplete="off"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className="field"
@@ -132,6 +141,7 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
           <input
             id="new-last-name"
             required
+            autoComplete="off"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className="field"
@@ -143,6 +153,7 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
           </label>
           <input
             id="new-middle-name"
+            autoComplete="off"
             value={middleName}
             onChange={(e) => setMiddleName(e.target.value)}
             className="field"
@@ -362,15 +373,18 @@ function UserRow({
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="First name"
+            autoComplete="off"
             className="field py-1"
           />
           <input
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             placeholder="Last name"
+            autoComplete="off"
             className="field py-1"
           />
           <input
+            autoComplete="off"
             value={middleName}
             onChange={(e) => setMiddleName(e.target.value)}
             placeholder="Middle name (optional)"
