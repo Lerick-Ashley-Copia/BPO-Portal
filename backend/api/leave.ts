@@ -164,8 +164,10 @@ async function handleReviewLeaveRequest(req: AuthedRequest, res: VercelResponse,
 
 // ---- Attendance ----
 
-const CHECK_IN_WINDOW_START_MIN = 8 * 60 // 8:00 AM
-const CHECK_IN_WINDOW_END_MIN = 17 * 60 + 30 // 5:30 PM
+// Night-shift window, so it wraps past midnight: valid check-in times
+// are >= START or <= END, not a simple START..END range.
+const CHECK_IN_WINDOW_START_MIN = 19 * 60 + 30 // 7:30 PM
+const CHECK_IN_WINDOW_END_MIN = 5 * 60 + 30 // 5:30 AM
 
 const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
 
@@ -289,8 +291,8 @@ async function handleCheckIn(req: AuthedRequest, res: VercelResponse) {
   }
 
   const minutesNow = minutesIntoManilaDay()
-  if (minutesNow < CHECK_IN_WINDOW_START_MIN || minutesNow > CHECK_IN_WINDOW_END_MIN) {
-    res.status(400).json({ message: 'Check-in is only recorded between 8:00 AM and 5:30 PM' })
+  if (minutesNow > CHECK_IN_WINDOW_END_MIN && minutesNow < CHECK_IN_WINDOW_START_MIN) {
+    res.status(400).json({ message: 'Check-in is only recorded between 7:30 PM and 5:30 AM' })
     return
   }
 
