@@ -127,14 +127,14 @@ function EmployeeRow({
           <div className="font-medium text-gray-900 dark:text-gray-100">{employee.name}</div>
           <div className="text-xs text-gray-500 dark:text-gray-400">{employee.email}</div>
         </td>
-        <td className="py-2.5 pr-4">{employee.position ?? '—'}</td>
-        <td className="py-2.5 pr-4">{employee.department ?? '—'}</td>
-        <td className="py-2.5 pr-4">{employee.team ?? '—'}</td>
-        <td className="py-2.5 pr-4">{humanize(employee.status)}</td>
-        <td className="py-2.5 pr-4">
+        <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">{employee.position ?? '—'}</td>
+        <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">{employee.department ?? '—'}</td>
+        <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">{employee.team ?? '—'}</td>
+        <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">{humanize(employee.status)}</td>
+        <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">
           {employee.dateHired ? dateFormatter.format(new Date(employee.dateHired)) : '—'}
         </td>
-        <td className="py-2.5 pr-4">
+        <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">
           {employee.silBalance} day{employee.silBalance === 1 ? '' : 's'}
         </td>
         <td className="py-2.5 pr-4">

@@ -152,21 +152,25 @@ export function AttendancePage() {
                   key={r.id}
                   className="border-b border-black/5 transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/5 dark:hover:bg-white/[0.03]"
                 >
-                  {isReviewer && <td className="py-2.5 pl-4 pr-4">{r.employeeName}</td>}
-                  <td className="py-2.5 pl-4 pr-4">{formatDateOnly(r.date)}</td>
+                  {isReviewer && (
+                    <td className="py-2.5 pl-4 pr-4 text-gray-700 dark:text-gray-300">{r.employeeName}</td>
+                  )}
+                  <td className="py-2.5 pl-4 pr-4 text-gray-700 dark:text-gray-300">{formatDateOnly(r.date)}</td>
                   {r.status === 'absent' ? (
                     <>
                       <td colSpan={isReviewer ? 3 : 2} className="py-2.5 pr-4 text-amber-700 dark:text-amber-500">
                         Absent
                       </td>
-                      {isReviewer && <td className="py-2.5 pr-4">—</td>}
+                      {isReviewer && <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">—</td>}
                     </>
                   ) : (
                     <>
-                      <td className="py-2.5 pr-4">{timeFmt(r.checkInAt)}</td>
-                      <td className="py-2.5 pr-4">{timeFmt(r.checkOutAt)}</td>
+                      <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">{timeFmt(r.checkInAt)}</td>
+                      <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">{timeFmt(r.checkOutAt)}</td>
                       {isReviewer && (
-                        <td className={`py-2.5 pr-4 ${r.checkInOffSite ? 'text-amber-700 dark:text-amber-500' : ''}`}>
+                        <td
+                          className={`py-2.5 pr-4 ${r.checkInOffSite ? 'text-amber-700 dark:text-amber-500' : 'text-gray-700 dark:text-gray-300'}`}
+                        >
                           {r.checkInIp ?? '—'}
                           {r.checkInOffSite && <span className="ml-1 text-xs">(off-site)</span>}
                         </td>

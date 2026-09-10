@@ -40,8 +40,8 @@ export function AuditLogsPage() {
                     {dateFormatter.format(new Date(log.createdAt))}
                   </td>
                   <td className="py-2.5 pr-4 text-gray-900 dark:text-gray-200">{log.user}</td>
-                  <td className="py-2.5 pr-4">{humanize(log.action)}</td>
-                  <td className="py-2.5 pr-4">
+                  <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">{humanize(log.action)}</td>
+                  <td className="py-2.5 pr-4 text-gray-700 dark:text-gray-300">
                     {humanize(log.resource)}
                     {log.resourceId && (
                       <span className="text-gray-400 dark:text-gray-500"> #{log.resourceId.slice(0, 8)}</span>
