@@ -102,11 +102,12 @@ export function PortalLayout() {
     <div className="min-h-svh flex flex-col">
       <header className="sticky top-0 z-40 border-b border-black/5 bg-white/75 backdrop-blur-md dark:border-white/10 dark:bg-brand-950/75">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-          <div className="flex min-w-0 shrink-0 items-center gap-2">
+          <div className="flex min-w-0 shrink-0 items-center gap-3">
             <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="" className="h-7 w-7 shrink-0" />
             <span className="min-w-0 truncate text-lg font-bold tracking-tight text-gold-600 dark:text-gold-400">
               BPO Portal
             </span>
+            <ThemeToggle />
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-3 text-sm sm:gap-4">
             <RoleSwitcher />
@@ -114,7 +115,6 @@ export function PortalLayout() {
               {user?.email}
             </span>
             <CheckOutButton />
-            <ThemeToggle />
             <Button size="sm" onClick={logout} className="shrink-0">
               Log out
             </Button>
