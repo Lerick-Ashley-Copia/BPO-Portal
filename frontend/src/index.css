@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
 
+/* Class-based dark mode (toggled by the header's light/dark switch,
+   applied pre-paint by the inline script in index.html) instead of
+   Tailwind's default prefers-color-scheme media query — so a user's
+   choice overrides whatever their OS happens to report. Every
+   existing dark: utility class in the app keys off this now. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
@@ -32,23 +39,25 @@
   color-scheme: light dark;
 }
 
+/* Light mode, softened — the original version (a near-white radial
+   gradient under near-white cards) was reported as genuinely too
+   bright/eye-straining by an actual night-shift user. Still light,
+   just without the blown-out white hotspot. */
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background-color: #f2faf5;
-  background-image: radial-gradient(circle at 50% -10%, #ffffff 0%, #e7f5ec 45%, #dcefe3 100%);
+  background-color: #e9f2ec;
+  background-image: radial-gradient(circle at 50% -10%, #f3f8f4 0%, #e3eee6 45%, #d6e7db 100%);
   min-height: 100svh;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #04140c;
-    background-image:
-      radial-gradient(circle at 15% 0%, rgba(34, 171, 104, 0.16) 0%, transparent 45%),
-      radial-gradient(circle at 85% 100%, rgba(34, 171, 104, 0.10) 0%, transparent 45%),
-      radial-gradient(circle at 50% 0%, #0d3521 0%, #04140c 60%);
-    background-attachment: fixed;
-  }
+.dark body {
+  background-color: #04140c;
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(34, 171, 104, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 85% 100%, rgba(34, 171, 104, 0.1) 0%, transparent 45%),
+    radial-gradient(circle at 50% 0%, #0d3521 0%, #04140c 60%);
+  background-attachment: fixed;
 }
 
 ::selection {
@@ -68,25 +77,19 @@ body {
     letter-spacing: -0.01em;
   }
 
-  /* The popup list a <select> opens is a native browser surface, not
-     part of the page's own paint — it ignores translucent
-     dark:bg-white/[...] card backgrounds and any gradient behind them,
-     so it needs its own solid, opaque color or it defaults to plain
-     white-on-white regardless of the rest of the theme. !important
-     because this has to beat both our own .field component class and
-     any inline Tailwind utility background on a <select>. */
-  select,
-  select option {
-    background-color: #ffffff !important;
-    color: #111827 !important;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  select,
-  select option {
-    background-color: #0f2a1c !important;
-    color: #ffffff !important;
+  /* The popup list a <select> opens is a native, browser-drawn surface
+     — and critically, Chromium on Windows just ignores author
+     background-color on <option> in that popup while still honoring
+     a custom text color, so a dark-mode "white text" override with no
+     matching background renders as invisible white-on-white until
+     hovered (confirmed — that's the actual bug, not a specificity
+     issue). The only reliable cross-browser fix is to stop fighting
+     it: force the popup itself to always use the browser's native
+     light rendering (guaranteed correct background+text pairing),
+     regardless of the app's own theme. The closed control still shows
+     our themed background via .field — only the open popup is exempt. */
+  select {
+    color-scheme: light;
   }
 }
 

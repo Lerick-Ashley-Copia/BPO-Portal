@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 import type { Role } from '../auth/types'
 import { api, ApiError } from '../services/api'
 import { Button } from '../components/ui/Button'
+import { useTheme } from '../theme/ThemeContext'
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
@@ -46,6 +47,21 @@ function RoleSwitcher() {
         ))}
       </select>
     </label>
+  )
+}
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme()
+
+  return (
+    <Button
+      size="sm"
+      onClick={toggleTheme}
+      className="shrink-0"
+      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+    </Button>
   )
 }
 
@@ -98,6 +114,7 @@ export function PortalLayout() {
               {user?.email}
             </span>
             <CheckOutButton />
+            <ThemeToggle />
             <Button size="sm" onClick={logout} className="shrink-0">
               Log out
             </Button>

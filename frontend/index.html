@@ -6,6 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BPO Portal</title>
     <script>
+      // Applied before first paint (and before React mounts) to avoid
+      // a flash of the wrong theme. Defaults to dark, not the OS
+      // preference — most people using this at all are on a night
+      // shift, where the bright light theme is a real eye-strain
+      // complaint. Anyone can still switch via the header toggle,
+      // which is what sets bpo_theme.
+      ;(function () {
+        var stored = localStorage.getItem('bpo_theme')
+        var isDark = stored ? stored === 'dark' : true
+        document.documentElement.classList.toggle('dark', isDark)
+      })()
+    </script>
+    <script>
       // Matching half of the 404.html redirect trick — decodes a path
       // encoded by 404.html back into the real URL before React Router
       // mounts. See public/404.html for why this exists.

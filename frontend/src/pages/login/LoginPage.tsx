@@ -3,9 +3,11 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, useAuth } from '../../auth/AuthContext'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
+import { useTheme } from '../../theme/ThemeContext'
 
 export function LoginPage() {
   const { user, login } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -33,7 +35,13 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center px-4">
+    <div className="relative flex min-h-svh items-center justify-center px-4">
+      <button
+        onClick={toggleTheme}
+        className="absolute right-4 top-4 rounded-lg border border-black/10 bg-white/70 px-2.5 py-1.5 text-xs text-gray-700 backdrop-blur-sm dark:border-white/15 dark:bg-white/5 dark:text-gray-300"
+      >
+        {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+      </button>
       <Card className="w-full max-w-sm !p-8 shadow-xl">
         <div className="mb-6 flex flex-col items-center text-center">
           <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="" className="h-12 w-12" />
