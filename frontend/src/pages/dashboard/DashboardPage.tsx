@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { useApiData } from '../../hooks/useApiData'
+import { Card } from '../../components/ui/Card'
 import type { Announcement } from '../announcements/types'
 import { AdminWidgets } from './AdminWidgets'
 import { CheckInPrompt } from './CheckInPrompt'
@@ -30,11 +31,11 @@ export function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
         Welcome{user?.firstName ? `, ${user.firstName}` : ''}
       </h1>
       {user && (
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           {user.roles.map((role) => roleLabels[role] ?? role).join(', ')}
         </p>
       )}
@@ -47,41 +48,41 @@ export function DashboardPage() {
 
       <div className="mt-6 grid gap-6 md:grid-cols-3">
         <section className="md:col-span-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             Latest Announcements
           </h2>
 
           {loading && <LoadingState />}
           {error && <ErrorState message={error} />}
           {data && latest.length === 0 && (
-            <p className="mt-2 text-sm text-gray-500">Nothing posted yet.</p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Nothing posted yet.</p>
           )}
 
           {latest.length > 0 && (
             <ul className="mt-2 space-y-3">
               {latest.map((announcement) => (
-                <li
-                  key={announcement.id}
-                  className="rounded-lg border border-gray-200 p-4 dark:border-gray-800"
-                >
-                  <h3 className="font-medium">{announcement.title}</h3>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {announcement.content}
-                  </p>
+                <li key={announcement.id}>
+                  <Card>
+                    <h3 className="font-medium text-gray-900 dark:text-white">{announcement.title}</h3>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{announcement.content}</p>
+                  </Card>
                 </li>
               ))}
             </ul>
           )}
 
           {data && data.length > 0 && (
-            <Link to="/announcements" className="mt-3 inline-block text-sm text-green-600">
+            <Link
+              to="/announcements"
+              className="mt-3 inline-block text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+            >
               View all announcements →
             </Link>
           )}
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             Quick Links
           </h2>
           <ul className="mt-2 space-y-2">
@@ -89,7 +90,7 @@ export function DashboardPage() {
               <li key={link.to}>
                 <Link
                   to={link.to}
-                  className="block rounded-lg border border-gray-200 px-4 py-2 text-sm hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900"
+                  className="block rounded-lg border border-black/5 bg-white/70 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm backdrop-blur-sm transition hover:border-brand-300 hover:bg-white hover:text-brand-700 dark:border-white/10 dark:bg-white/[0.035] dark:text-gray-300 dark:hover:border-brand-700 dark:hover:bg-white/[0.07] dark:hover:text-brand-400"
                 >
                   {link.label}
                 </Link>

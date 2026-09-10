@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, useAuth } from '../../auth/AuthContext'
+import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
 
 export function LoginPage() {
   const { user, login } = useAuth()
@@ -31,49 +33,51 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 p-6">
-        <h1 className="text-xl font-semibold">BPO Portal</h1>
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm text-gray-600">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
-          />
+    <div className="flex min-h-svh items-center justify-center px-4">
+      <Card className="w-full max-w-sm !p-8 shadow-xl">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <img src="/favicon.png" alt="" className="h-12 w-12" />
+          <h1 className="mt-3 text-xl font-bold tracking-tight text-gray-900 dark:text-white">BPO Portal</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Sign in to continue</p>
         </div>
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm text-gray-600">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
-          />
-          <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-green-600 hover:underline">
-              Forgot password?
-            </Link>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label htmlFor="email" className="text-sm text-gray-600 dark:text-gray-400">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="field"
+            />
           </div>
-        </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded bg-green-600 px-3 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
-        >
-          {submitting ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
+          <div className="space-y-1">
+            <label htmlFor="password" className="text-sm text-gray-600 dark:text-gray-400">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="field"
+            />
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-sm text-brand-600 hover:underline dark:text-brand-400">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+          <Button type="submit" variant="primary" disabled={submitting} className="w-full">
+            {submitting ? 'Signing in…' : 'Sign in'}
+          </Button>
+        </form>
+      </Card>
     </div>
   )
 }

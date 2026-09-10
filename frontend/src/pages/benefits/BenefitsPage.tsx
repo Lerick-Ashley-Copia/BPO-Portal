@@ -2,6 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
+import { Card, CardForm } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { PageHeader } from '../../components/ui/PageHeader'
 import type { Benefit } from './types'
 
 function groupByCategory(benefits: Benefit[]): Map<string, Benefit[]> {
@@ -49,30 +52,56 @@ function CreateForm({ onCreated }: { onCreated: (b: Benefit) => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+    <CardForm onSubmit={handleSubmit} className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <label htmlFor="ben-title" className="text-sm text-gray-600">Title</label>
-          <input id="ben-title" required value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+          <label htmlFor="ben-title" className="text-sm text-gray-600 dark:text-gray-400">
+            Title
+          </label>
+          <input id="ben-title" required value={title} onChange={(e) => setTitle(e.target.value)} className="field" />
         </div>
         <div className="space-y-1">
-          <label htmlFor="ben-category" className="text-sm text-gray-600">Category</label>
-          <input id="ben-category" required value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+          <label htmlFor="ben-category" className="text-sm text-gray-600 dark:text-gray-400">
+            Category
+          </label>
+          <input
+            id="ben-category"
+            required
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="field"
+          />
         </div>
       </div>
       <div className="space-y-1">
-        <label htmlFor="ben-description" className="text-sm text-gray-600">Description</label>
-        <textarea id="ben-description" required rows={2} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+        <label htmlFor="ben-description" className="text-sm text-gray-600 dark:text-gray-400">
+          Description
+        </label>
+        <textarea
+          id="ben-description"
+          required
+          rows={2}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="field"
+        />
       </div>
       <div className="space-y-1">
-        <label htmlFor="ben-eligibility" className="text-sm text-gray-600">Eligibility (optional)</label>
-        <input id="ben-eligibility" value={eligibility} onChange={(e) => setEligibility(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+        <label htmlFor="ben-eligibility" className="text-sm text-gray-600 dark:text-gray-400">
+          Eligibility (optional)
+        </label>
+        <input
+          id="ben-eligibility"
+          value={eligibility}
+          onChange={(e) => setEligibility(e.target.value)}
+          className="field"
+        />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={submitting} className="rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <Button type="submit" variant="primary" disabled={submitting}>
         {submitting ? 'Adding…' : 'Add benefit'}
-      </button>
-    </form>
+      </Button>
+    </CardForm>
   )
 }
 
@@ -134,75 +163,55 @@ function BenefitCard({
 
   if (editing) {
     return (
-      <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+      <Card>
         <div className="grid gap-2 sm:grid-cols-2">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm font-medium"
-          />
-          <input
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm"
-          />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} className="field font-medium" />
+          <input value={category} onChange={(e) => setCategory(e.target.value)} className="field" />
         </div>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
-          className="mt-2 w-full rounded border border-gray-300 px-3 py-1.5 text-sm"
+          className="field mt-2"
         />
         <input
           value={eligibility}
           onChange={(e) => setEligibility(e.target.value)}
           placeholder="Eligibility (optional)"
-          className="mt-2 w-full rounded border border-gray-300 px-3 py-1.5 text-sm"
+          className="field mt-2"
         />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
         <div className="mt-2 flex gap-2">
-          <button
-            onClick={save}
-            disabled={saving}
-            className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 disabled:opacity-50"
-          >
+          <Button size="sm" variant="primary" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-          >
+          </Button>
+          <Button size="sm" onClick={() => setEditing(false)}>
             Cancel
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     )
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-      <h3 className="font-medium">{benefit.title}</h3>
+    <Card>
+      <h3 className="font-medium text-gray-900 dark:text-white">{benefit.title}</h3>
       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{benefit.description}</p>
-      {benefit.eligibility && <p className="mt-2 text-xs text-gray-500">Eligibility: {benefit.eligibility}</p>}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {benefit.eligibility && (
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Eligibility: {benefit.eligibility}</p>
+      )}
+      {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
       {canManage && (
-        <div className="mt-2 flex gap-2">
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-          >
+        <div className="mt-3 flex gap-2">
+          <Button size="sm" onClick={() => setEditing(true)}>
             Edit
-          </button>
-          <button
-            onClick={remove}
-            disabled={deleting}
-            className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
-          >
+          </Button>
+          <Button size="sm" variant="danger" onClick={remove} disabled={deleting}>
             {deleting ? 'Deleting…' : 'Delete'}
-          </button>
+          </Button>
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 
@@ -223,10 +232,10 @@ export function BenefitsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Benefits</h1>
+      <PageHeader title="Benefits" />
 
       {canManage && (
-        <div className="mt-4">
+        <div className="mb-4">
           <CreateForm onCreated={(b) => setData((prev) => (prev ? [...prev, b] : [b]))} />
         </div>
       )}
@@ -236,10 +245,12 @@ export function BenefitsPage() {
       {data && data.length === 0 && <EmptyState label="No benefits published yet." />}
 
       {data && data.length > 0 && (
-        <div className="mt-4 space-y-6">
+        <div className="space-y-6">
           {Array.from(groupByCategory(data)).map(([category, benefits]) => (
             <section key={category}>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">{category}</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {category}
+              </h2>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
                 {benefits.map((benefit) => (
                   <BenefitCard

@@ -2,6 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { api, ApiError } from '../../services/api'
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState'
+import { Card, CardForm } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { PageHeader } from '../../components/ui/PageHeader'
 import type { Document } from './types'
 
 function groupByCategory(documents: Document[]): Map<string, Document[]> {
@@ -74,36 +77,58 @@ function UploadForm({ onUploaded }: { onUploaded: (d: Document) => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+    <CardForm onSubmit={handleSubmit} className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <label htmlFor="doc-title" className="text-sm text-gray-600">Title</label>
-          <input id="doc-title" required value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+          <label htmlFor="doc-title" className="text-sm text-gray-600 dark:text-gray-400">
+            Title
+          </label>
+          <input id="doc-title" required value={title} onChange={(e) => setTitle(e.target.value)} className="field" />
         </div>
         <div className="space-y-1">
-          <label htmlFor="doc-category" className="text-sm text-gray-600">Category</label>
-          <input id="doc-category" required value={categoryName} onChange={(e) => setCategoryName(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+          <label htmlFor="doc-category" className="text-sm text-gray-600 dark:text-gray-400">
+            Category
+          </label>
+          <input
+            id="doc-category"
+            required
+            value={categoryName}
+            onChange={(e) => setCategoryName(e.target.value)}
+            className="field"
+          />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <label htmlFor="doc-access" className="text-sm text-gray-600">Visible to</label>
-          <select id="doc-access" value={accessLevel} onChange={(e) => setAccessLevel(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+          <label htmlFor="doc-access" className="text-sm text-gray-600 dark:text-gray-400">
+            Visible to
+          </label>
+          <select id="doc-access" value={accessLevel} onChange={(e) => setAccessLevel(e.target.value)} className="field">
             {ROLES.map((r) => (
-              <option key={r} value={r}>{r === 'employee' ? 'Everyone' : r}</option>
+              <option key={r} value={r}>
+                {r === 'employee' ? 'Everyone' : r}
+              </option>
             ))}
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="doc-file" className="text-sm text-gray-600">File (max 4MB)</label>
-          <input id="doc-file" type="file" required onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="w-full text-sm" />
+          <label htmlFor="doc-file" className="text-sm text-gray-600 dark:text-gray-400">
+            File (max 4MB)
+          </label>
+          <input
+            id="doc-file"
+            type="file"
+            required
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-brand-700 dark:text-gray-300"
+          />
         </div>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={uploading} className="rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <Button type="submit" variant="primary" disabled={uploading}>
         {uploading ? 'Uploading…' : 'Upload'}
-      </button>
-    </form>
+      </Button>
+    </CardForm>
   )
 }
 
@@ -139,10 +164,10 @@ export function DocumentsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Documents</h1>
+      <PageHeader title="Documents" />
 
       {canManage && (
-        <div className="mt-4">
+        <div className="mb-4">
           <UploadForm onUploaded={(d) => setData((prev) => (prev ? [d, ...prev] : [d]))} />
         </div>
       )}
@@ -150,29 +175,28 @@ export function DocumentsPage() {
       {loading && <LoadingState />}
       {error && <ErrorState message={error} />}
       {data && data.length === 0 && <EmptyState label="No documents available yet." />}
-      {downloadError && <div className="mt-3"><ErrorState message={downloadError} /></div>}
+      {downloadError && (
+        <div className="mb-3">
+          <ErrorState message={downloadError} />
+        </div>
+      )}
 
       {data && data.length > 0 && (
-        <div className="mt-4 space-y-6">
+        <div className="space-y-6">
           {Array.from(groupByCategory(data)).map(([category, docs]) => (
             <section key={category}>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 {category}
               </h2>
               <ul className="mt-2 space-y-2">
                 {docs.map((doc) => (
-                  <li
-                    key={doc.id}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-800"
-                  >
-                    <span className="font-medium">{doc.title}</span>
-                    <button
-                      onClick={() => handleDownload(doc.id)}
-                      disabled={downloadingId === doc.id}
-                      className="shrink-0 rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-900"
-                    >
-                      {downloadingId === doc.id ? 'Preparing…' : 'Download'}
-                    </button>
+                  <li key={doc.id}>
+                    <Card className="flex items-center justify-between !py-3">
+                      <span className="font-medium text-gray-900 dark:text-white">{doc.title}</span>
+                      <Button size="sm" onClick={() => handleDownload(doc.id)} disabled={downloadingId === doc.id}>
+                        {downloadingId === doc.id ? 'Preparing…' : 'Download'}
+                      </Button>
+                    </Card>
                   </li>
                 ))}
               </ul>

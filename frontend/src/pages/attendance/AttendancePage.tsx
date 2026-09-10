@@ -5,6 +5,9 @@ import { useApiData } from '../../hooks/useApiData'
 import { api, ApiError } from '../../services/api'
 import type { EmployeeRecord } from '../hris/types'
 import { formatDateOnly, formatManilaTime, todayInManilaIso } from '../../utils/dates'
+import { Card, CardForm } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { PageHeader } from '../../components/ui/PageHeader'
 import type { AttendanceRecord } from './types'
 
 const timeFmt = formatManilaTime
@@ -43,17 +46,10 @@ function MarkAbsentForm({ onMarked }: { onMarked: () => void }) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800"
-    >
-      <label className="flex flex-col text-sm">
+    <CardForm onSubmit={handleSubmit} className="mb-6 flex flex-wrap items-end gap-3">
+      <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400">
         Employee
-        <select
-          value={employeeId}
-          onChange={(e) => setEmployeeId(e.target.value)}
-          className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
-        >
+        <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="field mt-1">
           <option value="">Select…</option>
           {employees?.map((emp) => (
             <option key={emp.id} value={emp.id}>
@@ -62,25 +58,16 @@ function MarkAbsentForm({ onMarked }: { onMarked: () => void }) {
           ))}
         </select>
       </label>
-      <label className="flex flex-col text-sm">
+      <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400">
         Date
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
-        />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="field mt-1" />
       </label>
-      <button
-        type="submit"
-        disabled={submitting}
-        className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
-      >
+      <Button type="submit" size="sm" disabled={submitting}>
         {submitting ? 'Marking…' : 'Mark Absent'}
-      </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {success && <p className="text-sm text-green-700 dark:text-green-500">{success}</p>}
-    </form>
+      </Button>
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {success && <p className="text-sm text-brand-700 dark:text-brand-400">{success}</p>}
+    </CardForm>
   )
 }
 
@@ -88,13 +75,9 @@ function EmployeeFilter({ value, onChange }: { value: string; onChange: (id: str
   const { data: employees } = useApiData<EmployeeRecord[]>('/employees')
 
   return (
-    <label className="flex flex-col text-sm">
+    <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400">
       Employee
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
-      >
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="field mt-1">
         <option value="">All employees</option>
         {employees?.map((emp) => (
           <option key={emp.id} value={emp.id}>
@@ -142,53 +125,37 @@ export function AttendancePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Attendance</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        {isReviewer ? 'All employees.' : 'Your check-in/check-out history.'}
-      </p>
+      <PageHeader
+        title="Attendance"
+        description={isReviewer ? 'All employees.' : 'Your check-in/check-out history.'}
+      />
 
-      <div className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col text-sm">
+      <Card className="mb-4 flex flex-wrap items-end gap-3">
+        <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400">
           From
-          <input
-            type="date"
-            value={from}
-            max={to}
-            onChange={(e) => setFrom(e.target.value)}
-            className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
-          />
+          <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="field mt-1" />
         </label>
-        <label className="flex flex-col text-sm">
+        <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400">
           To
-          <input
-            type="date"
-            value={to}
-            min={from}
-            onChange={(e) => setTo(e.target.value)}
-            className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
-          />
+          <input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} className="field mt-1" />
         </label>
         {isReviewer && <EmployeeFilter value={employeeId} onChange={setEmployeeId} />}
-        <button
+        <Button
+          size="sm"
           onClick={() => {
             const t = todayInManilaIso()
             setFrom(t)
             setTo(t)
           }}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
         >
           Today
-        </button>
-        <button
-          onClick={handleExport}
-          disabled={exporting || rangeInvalid}
-          className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-        >
+        </Button>
+        <Button size="sm" variant="primary" onClick={handleExport} disabled={exporting || rangeInvalid}>
           {exporting ? 'Exporting…' : 'Export to Excel'}
-        </button>
-      </div>
-      {rangeInvalid && <p className="mt-2 text-sm text-red-600">"To" can't be before "From".</p>}
-      {exportError && <p className="mt-2 text-sm text-red-600">{exportError}</p>}
+        </Button>
+      </Card>
+      {rangeInvalid && <p className="mb-2 text-sm text-red-600 dark:text-red-400">"To" can't be before "From".</p>}
+      {exportError && <p className="mb-2 text-sm text-red-600 dark:text-red-400">{exportError}</p>}
 
       {isReviewer && <MarkAbsentForm onMarked={() => setReloadToken((t) => t + 1)} />}
 
@@ -197,32 +164,35 @@ export function AttendancePage() {
       {data && data.length === 0 && <EmptyState label="No attendance records in this range." />}
 
       {data && data.length > 0 && (
-        <div className="mt-4 overflow-x-auto">
+        <Card className="overflow-x-auto !p-0">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-800">
-                {isReviewer && <th className="py-2 pr-4 font-medium">Employee</th>}
-                <th className="py-2 pr-4 font-medium">Date</th>
-                <th className="py-2 pr-4 font-medium">Check In</th>
-                <th className="py-2 pr-4 font-medium">Check Out</th>
-                {isReviewer && <th className="py-2 font-medium">Check-in IP</th>}
+              <tr className="border-b border-black/5 text-xs uppercase tracking-wide text-gray-500 dark:border-white/10 dark:text-gray-400">
+                {isReviewer && <th className="py-3 pl-4 pr-4 font-medium">Employee</th>}
+                <th className="py-3 pr-4 pl-4 font-medium first:pl-4">Date</th>
+                <th className="py-3 pr-4 font-medium">Check In</th>
+                <th className="py-3 pr-4 font-medium">Check Out</th>
+                {isReviewer && <th className="py-3 pr-4 font-medium">Check-in IP</th>}
               </tr>
             </thead>
             <tbody>
               {data.map((r) => (
-                <tr key={r.id} className="border-b border-gray-100 dark:border-gray-800">
-                  {isReviewer && <td className="py-2 pr-4">{r.employeeName}</td>}
-                  <td className="py-2 pr-4">{formatDateOnly(r.date)}</td>
+                <tr
+                  key={r.id}
+                  className="border-b border-black/5 transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/5 dark:hover:bg-white/[0.03]"
+                >
+                  {isReviewer && <td className="py-2.5 pl-4 pr-4">{r.employeeName}</td>}
+                  <td className="py-2.5 pl-4 pr-4">{formatDateOnly(r.date)}</td>
                   {r.status === 'absent' ? (
-                    <td colSpan={isReviewer ? 3 : 2} className="py-2 text-amber-700 dark:text-amber-500">
+                    <td colSpan={isReviewer ? 3 : 2} className="py-2.5 pr-4 text-amber-700 dark:text-amber-500">
                       Absent
                     </td>
                   ) : (
                     <>
-                      <td className="py-2 pr-4">{timeFmt(r.checkInAt)}</td>
-                      <td className="py-2 pr-4">{timeFmt(r.checkOutAt)}</td>
+                      <td className="py-2.5 pr-4">{timeFmt(r.checkInAt)}</td>
+                      <td className="py-2.5 pr-4">{timeFmt(r.checkOutAt)}</td>
                       {isReviewer && (
-                        <td className={`py-2 ${r.checkInOffSite ? 'text-amber-700 dark:text-amber-500' : ''}`}>
+                        <td className={`py-2.5 pr-4 ${r.checkInOffSite ? 'text-amber-700 dark:text-amber-500' : ''}`}>
                           {r.checkInIp ?? '—'}
                           {r.checkInOffSite && <span className="ml-1 text-xs">(off-site)</span>}
                         </td>
@@ -233,7 +203,7 @@ export function AttendancePage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
     </div>
   )

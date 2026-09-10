@@ -3,6 +3,8 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import type { AuthUser } from '../../auth/types'
 import { api, ApiError } from '../../services/api'
+import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
 
 export function SetPasswordPage() {
   const [searchParams] = useSearchParams()
@@ -19,7 +21,9 @@ export function SetPasswordPage() {
   if (!token) {
     return (
       <div className="flex min-h-svh items-center justify-center px-4 text-center">
-        <p className="text-sm text-gray-500">This setup link is missing a token. Ask your administrator for a new one.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          This setup link is missing a token. Ask your administrator for a new one.
+        </p>
       </div>
     )
   }
@@ -49,46 +53,47 @@ export function SetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 p-6">
-        <h1 className="text-xl font-semibold">Set your password</h1>
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm text-gray-600">
-            New password
-          </label>
-          <input
-            id="password"
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
-          />
+    <div className="flex min-h-svh items-center justify-center px-4">
+      <Card className="w-full max-w-sm !p-8 shadow-xl">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <img src="/favicon.png" alt="" className="h-12 w-12" />
+          <h1 className="mt-3 text-xl font-bold tracking-tight text-gray-900 dark:text-white">Set your password</h1>
         </div>
-        <div className="space-y-1">
-          <label htmlFor="confirm" className="text-sm text-gray-600">
-            Confirm password
-          </label>
-          <input
-            id="confirm"
-            type="password"
-            required
-            minLength={8}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
-          />
-        </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded bg-green-600 px-3 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
-        >
-          {submitting ? 'Setting password…' : 'Set password and log in'}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label htmlFor="password" className="text-sm text-gray-600 dark:text-gray-400">
+              New password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="field"
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="confirm" className="text-sm text-gray-600 dark:text-gray-400">
+              Confirm password
+            </label>
+            <input
+              id="confirm"
+              type="password"
+              required
+              minLength={8}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="field"
+            />
+          </div>
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+          <Button type="submit" variant="primary" disabled={submitting} className="w-full">
+            {submitting ? 'Setting password…' : 'Set password and log in'}
+          </Button>
+        </form>
+      </Card>
     </div>
   )
 }

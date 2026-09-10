@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { api, ApiError } from '../services/api'
 import type { AuthUser, Role } from './types'
+import { Card } from '../components/ui/Card'
+import { Button } from '../components/ui/Button'
 
 interface PendingAction {
   requiredRoles: Role[]
@@ -190,31 +192,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
 
       {pendingAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-lg dark:bg-gray-900">
-            <h2 className="font-semibold">Action not allowed for this role</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
+          <Card className="w-full max-w-sm !bg-white shadow-xl dark:!bg-brand-950">
+            <h2 className="font-semibold text-gray-900 dark:text-white">Action not allowed for this role</h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               The role you're viewing as ({viewAsRole ? roleLabels[viewAsRole] : ''}) can't do this.
               You're really an Administrator — proceed anyway?
             </p>
             <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={() => setPendingAction(null)}
-                className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-              >
+              <Button size="sm" onClick={() => setPendingAction(null)}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant="primary"
                 onClick={() => {
                   pendingAction.run()
                   setPendingAction(null)
                 }}
-                className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
               >
                 Proceed as Admin
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
     </AuthContext.Provider>

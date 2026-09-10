@@ -2,6 +2,10 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
+import { Card, CardForm } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { Badge } from '../../components/ui/Badge'
+import { PageHeader } from '../../components/ui/PageHeader'
 import type { Announcement } from './types'
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'Asia/Manila' })
@@ -33,41 +37,35 @@ function CreateForm({ onCreated }: { onCreated: (a: Announcement) => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+    <CardForm onSubmit={handleSubmit} className="space-y-3">
       <div className="space-y-1">
-        <label htmlFor="ann-title" className="text-sm text-gray-600">Title</label>
-        <input
-          id="ann-title"
-          required
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-        />
+        <label htmlFor="ann-title" className="text-sm text-gray-600 dark:text-gray-400">
+          Title
+        </label>
+        <input id="ann-title" required value={title} onChange={(e) => setTitle(e.target.value)} className="field" />
       </div>
       <div className="space-y-1">
-        <label htmlFor="ann-content" className="text-sm text-gray-600">Content</label>
+        <label htmlFor="ann-content" className="text-sm text-gray-600 dark:text-gray-400">
+          Content
+        </label>
         <textarea
           id="ann-content"
           required
           rows={3}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          className="field"
         />
       </div>
-      <label className="flex items-center gap-2 text-sm">
+      <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
         <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
         Publish immediately
       </label>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-      >
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <Button type="submit" variant="primary" disabled={submitting}>
         {submitting ? 'Posting…' : 'Post announcement'}
-      </button>
-    </form>
+      </Button>
+    </CardForm>
   )
 }
 
@@ -121,71 +119,61 @@ function AnnouncementItem({
 
   if (editing) {
     return (
-      <li className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm font-medium"
-        />
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={3}
-          className="mt-2 w-full rounded border border-gray-300 px-3 py-1.5 text-sm"
-        />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-        <div className="mt-2 flex gap-2">
-          <button
-            onClick={save}
-            disabled={saving}
-            className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-          >
-            Cancel
-          </button>
-        </div>
+      <li>
+        <Card>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="field font-medium"
+          />
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={3}
+            className="field mt-2"
+          />
+          {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
+          <div className="mt-2 flex gap-2">
+            <Button size="sm" variant="primary" onClick={save} disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </Button>
+            <Button size="sm" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+          </div>
+        </Card>
       </li>
     )
   }
 
   return (
-    <li className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-      <div className="flex items-baseline justify-between gap-4">
-        <h2 className="font-medium">{announcement.title}</h2>
-        {announcement.publishAt && (
-          <span className="shrink-0 text-xs text-gray-500">
-            {dateFormatter.format(new Date(announcement.publishAt))}
-          </span>
-        )}
-      </div>
-      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{announcement.content}</p>
-      {!announcement.published && (
-        <span className="mt-2 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-300">
-          Draft
-        </span>
-      )}
-      {canManage && (
-        <div className="mt-2 flex gap-2">
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-          >
-            Edit
-          </button>
-          <button
-            onClick={remove}
-            disabled={saving}
-            className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
-          >
-            Delete
-          </button>
+    <li>
+      <Card>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="font-medium text-gray-900 dark:text-white">{announcement.title}</h2>
+          {announcement.publishAt && (
+            <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
+              {dateFormatter.format(new Date(announcement.publishAt))}
+            </span>
+          )}
         </div>
-      )}
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{announcement.content}</p>
+        {!announcement.published && (
+          <Badge tone="amber" className="mt-2">
+            Draft
+          </Badge>
+        )}
+        {canManage && (
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" onClick={() => setEditing(true)}>
+              Edit
+            </Button>
+            <Button size="sm" variant="danger" onClick={remove} disabled={saving}>
+              Delete
+            </Button>
+          </div>
+        )}
+      </Card>
     </li>
   )
 }
@@ -207,10 +195,10 @@ export function AnnouncementsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Announcements</h1>
+      <PageHeader title="Announcements" />
 
       {canManage && (
-        <div className="mt-4">
+        <div className="mb-4">
           <CreateForm onCreated={(a) => setData((prev) => (prev ? [a, ...prev] : [a]))} />
         </div>
       )}
@@ -220,7 +208,7 @@ export function AnnouncementsPage() {
       {data && data.length === 0 && <EmptyState label="No announcements yet." />}
 
       {data && data.length > 0 && (
-        <ul className="mt-4 space-y-3">
+        <ul className="space-y-3">
           {data.map((announcement) => (
             <AnnouncementItem
               key={announcement.id}

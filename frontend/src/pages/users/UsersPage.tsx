@@ -3,6 +3,10 @@ import { useAuth } from '../../auth/AuthContext'
 import type { Role } from '../../auth/types'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
+import { Card, CardForm } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { Badge } from '../../components/ui/Badge'
+import { PageHeader } from '../../components/ui/PageHeader'
 import type { ManagedUser } from './types'
 import type { Department, Team } from '../hris/types'
 
@@ -22,7 +26,7 @@ function RoleCheckboxes({
   return (
     <div className="flex flex-wrap gap-3">
       {ALL_ROLES.map((role) => (
-        <label key={role} className="flex items-center gap-1 text-sm">
+        <label key={role} className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
           <input type="checkbox" checked={selected.includes(role)} onChange={() => toggle(role)} />
           {role}
         </label>
@@ -101,23 +105,16 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+    <CardForm onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <label htmlFor="new-email" className="text-sm text-gray-600">
+          <label htmlFor="new-email" className="text-sm text-gray-600 dark:text-gray-400">
             Email
           </label>
-          <input
-            id="new-email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-          />
+          <input id="new-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="field" />
         </div>
         <div className="space-y-1">
-          <label htmlFor="new-first-name" className="text-sm text-gray-600">
+          <label htmlFor="new-first-name" className="text-sm text-gray-600 dark:text-gray-400">
             First Name
           </label>
           <input
@@ -125,11 +122,11 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
             required
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="field"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="new-last-name" className="text-sm text-gray-600">
+          <label htmlFor="new-last-name" className="text-sm text-gray-600 dark:text-gray-400">
             Last Name
           </label>
           <input
@@ -137,36 +134,31 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
             required
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="field"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="new-middle-name" className="text-sm text-gray-600">
-            Middle Name <span className="text-gray-400">(optional)</span>
+          <label htmlFor="new-middle-name" className="text-sm text-gray-600 dark:text-gray-400">
+            Middle Name <span className="text-gray-400 dark:text-gray-500">(optional)</span>
           </label>
           <input
             id="new-middle-name"
             value={middleName}
             onChange={(e) => setMiddleName(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="field"
           />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1">
-          <label htmlFor="new-position" className="text-sm text-gray-600">
-            Position <span className="text-gray-400">(optional)</span>
+          <label htmlFor="new-position" className="text-sm text-gray-600 dark:text-gray-400">
+            Position <span className="text-gray-400 dark:text-gray-500">(optional)</span>
           </label>
-          <input
-            id="new-position"
-            value={position}
-            onChange={(e) => setPosition(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-          />
+          <input id="new-position" value={position} onChange={(e) => setPosition(e.target.value)} className="field" />
         </div>
         <div className="space-y-1">
-          <label htmlFor="new-department" className="text-sm text-gray-600">
-            Department <span className="text-gray-400">(optional)</span>
+          <label htmlFor="new-department" className="text-sm text-gray-600 dark:text-gray-400">
+            Department <span className="text-gray-400 dark:text-gray-500">(optional)</span>
           </label>
           <select
             id="new-department"
@@ -175,7 +167,7 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
               setDepartmentId(e.target.value)
               setTeamId('')
             }}
-            className="w-full rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+            className="field"
           >
             <option value="">—</option>
             {departments.map((d) => (
@@ -186,15 +178,15 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="new-team" className="text-sm text-gray-600">
-            Team <span className="text-gray-400">(optional)</span>
+          <label htmlFor="new-team" className="text-sm text-gray-600 dark:text-gray-400">
+            Team <span className="text-gray-400 dark:text-gray-500">(optional)</span>
           </label>
           <select
             id="new-team"
             value={teamId}
             onChange={(e) => setTeamId(e.target.value)}
             disabled={!departmentId}
-            className="w-full rounded border border-gray-300 px-2 py-2 text-sm disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900"
+            className="field disabled:opacity-50"
           >
             <option value="">—</option>
             {teamsInDepartment.map((t) => (
@@ -206,19 +198,15 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
         </div>
       </div>
       <div className="space-y-1">
-        <span className="text-sm text-gray-600">Roles</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400">Roles</span>
         <RoleCheckboxes selected={roles} onChange={setRoles} />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {success && <p className="text-sm text-green-700 dark:text-green-500">{success}</p>}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-      >
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {success && <p className="text-sm text-brand-700 dark:text-brand-400">{success}</p>}
+      <Button type="submit" variant="primary" disabled={submitting}>
         {submitting ? 'Creating…' : 'Create account'}
-      </button>
-    </form>
+      </Button>
+    </CardForm>
   )
 }
 
@@ -333,95 +321,76 @@ function UserRow({
 
   if (!editing) {
     return (
-      <tr className="border-b border-gray-100 align-top dark:border-gray-800">
-        <td className="py-2 pr-4">
-          <div className="font-medium">{user.name}</div>
-          <div className="text-xs text-gray-500">{user.email}</div>
+      <tr className="border-b border-black/5 align-top transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/5 dark:hover:bg-white/[0.03]">
+        <td className="py-2.5 pl-4 pr-4">
+          <div className="font-medium text-gray-900 dark:text-white">{user.name}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
           {!user.passwordSet && (
-            <span className="mt-1 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-300">
+            <Badge tone="amber" className="mt-1">
               Setup pending
-            </span>
+            </Badge>
           )}
         </td>
-        <td className="py-2 pr-4 text-sm text-gray-600 dark:text-gray-400">{user.roles.join(', ')}</td>
-        <td className="py-2">
-          <div className="flex gap-1">
-            <button
-              onClick={startEditing}
-              className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-            >
+        <td className="py-2.5 pr-4 text-sm text-gray-600 dark:text-gray-400">{user.roles.join(', ')}</td>
+        <td className="py-2.5 pr-4">
+          <div className="flex flex-wrap gap-1.5">
+            <Button size="sm" onClick={startEditing}>
               Edit
-            </button>
-            <button
-              onClick={sendResetLink}
-              disabled={sendingReset}
-              className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
-            >
+            </Button>
+            <Button size="sm" onClick={sendResetLink} disabled={sendingReset}>
               {sendingReset ? 'Sending…' : 'Send reset link'}
-            </button>
+            </Button>
             {!isSelf && (
-              <button
-                onClick={remove}
-                disabled={deleting}
-                className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
-              >
+              <Button size="sm" variant="danger" onClick={remove} disabled={deleting}>
                 {deleting ? 'Deleting…' : 'Delete'}
-              </button>
+              </Button>
             )}
           </div>
-          {resetMessage && <p className="mt-1 text-xs text-green-700 dark:text-green-500">{resetMessage}</p>}
-          {resetError && <p className="mt-1 text-xs text-red-600">{resetError}</p>}
-          {deleteError && <p className="mt-1 text-xs text-red-600">{deleteError}</p>}
+          {resetMessage && <p className="mt-1 text-xs text-brand-700 dark:text-brand-400">{resetMessage}</p>}
+          {resetError && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{resetError}</p>}
+          {deleteError && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{deleteError}</p>}
         </td>
       </tr>
     )
   }
 
   return (
-    <tr className="border-b border-gray-100 align-top dark:border-gray-800">
-      <td className="py-2 pr-4">
+    <tr className="border-b border-black/5 align-top dark:border-white/5">
+      <td className="py-2.5 pl-4 pr-4">
         <div className="space-y-1">
           <input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="First name"
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
+            className="field py-1"
           />
           <input
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             placeholder="Last name"
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
+            className="field py-1"
           />
           <input
             value={middleName}
             onChange={(e) => setMiddleName(e.target.value)}
             placeholder="Middle name (optional)"
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
+            className="field py-1"
           />
         </div>
-        <div className="mt-1 text-xs text-gray-500">{user.email}</div>
+        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
       </td>
-      <td className="py-2 pr-4">
+      <td className="py-2.5 pr-4">
         <RoleCheckboxes selected={roles} onChange={setRoles} />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
       </td>
-      <td className="py-2">
-        <div className="flex gap-1">
-          <button
-            onClick={save}
-            disabled={!dirty || saving}
-            className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 disabled:opacity-50"
-          >
+      <td className="py-2.5 pr-4">
+        <div className="flex gap-1.5">
+          <Button size="sm" variant="primary" onClick={save} disabled={!dirty || saving}>
             {saving ? 'Saving…' : 'Save'}
-          </button>
-          <button
-            onClick={cancel}
-            disabled={saving}
-            className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
-          >
+          </Button>
+          <Button size="sm" onClick={cancel} disabled={saving}>
             Cancel
-          </button>
+          </Button>
         </div>
       </td>
     </tr>
@@ -443,10 +412,10 @@ export function UsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Users</h1>
+      <PageHeader title="Users" />
 
-      <section className="mt-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+      <section>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
           Create Account
         </h2>
         <div className="mt-2">
@@ -455,18 +424,20 @@ export function UsersPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">All Users</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          All Users
+        </h2>
         <div className="mt-2">
           {loading && <LoadingState />}
           {error && <ErrorState message={error} />}
           {users && (
-            <div className="overflow-x-auto">
+            <Card className="overflow-x-auto !p-0">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-800">
-                    <th className="py-2 pr-4 font-medium">User</th>
-                    <th className="py-2 pr-4 font-medium">Roles</th>
-                    <th className="py-2 font-medium">Actions</th>
+                  <tr className="border-b border-black/5 text-xs uppercase tracking-wide text-gray-500 dark:border-white/10 dark:text-gray-400">
+                    <th className="py-3 pl-4 pr-4 font-medium">User</th>
+                    <th className="py-3 pr-4 font-medium">Roles</th>
+                    <th className="py-3 pr-4 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -482,7 +453,7 @@ export function UsersPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Card>
           )}
         </div>
       </section>

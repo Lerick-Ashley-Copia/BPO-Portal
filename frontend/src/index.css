@@ -1,4 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Brand scale sampled from the company's dark-green swirl motif —
+     used everywhere blue-600/700 used to be (buttons, active nav,
+     links, focus rings). */
+  --color-brand-50: #eefcf3;
+  --color-brand-100: #d7f7e3;
+  --color-brand-200: #b0eec9;
+  --color-brand-300: #7ddfa9;
+  --color-brand-400: #46c884;
+  --color-brand-500: #22ab68;
+  --color-brand-600: #158a52;
+  --color-brand-700: #106f43;
+  --color-brand-800: #0f5837;
+  --color-brand-900: #0d472e;
+  --color-brand-950: #05170f;
+}
 
 :root {
   color-scheme: light dark;
@@ -6,11 +26,47 @@
 
 body {
   margin: 0;
-  background-color: #f4faf6;
+  font-family: var(--font-sans);
+  background-color: #f2faf5;
+  background-image: radial-gradient(circle at 50% -10%, #ffffff 0%, #e7f5ec 45%, #dcefe3 100%);
+  min-height: 100svh;
 }
 
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: #051b10;
+    background-color: #04140c;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(34, 171, 104, 0.16) 0%, transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(34, 171, 104, 0.10) 0%, transparent 45%),
+      radial-gradient(circle at 50% 0%, #0d3521 0%, #04140c 60%);
+    background-attachment: fixed;
+  }
+}
+
+::selection {
+  background-color: var(--color-brand-300);
+  color: var(--color-brand-950);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  /* Shared look for every raw <input>/<select>/<textarea> across the
+     app — most weren't worth wrapping in a component (too many
+     one-off HTML attributes: type=date, min, max, rows…), so this is
+     applied as a plain utility class instead. */
+  .field {
+    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 dark:border-white/15 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-gray-500;
   }
 }

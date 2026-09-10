@@ -2,6 +2,10 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
+import { Card, CardForm } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { Badge } from '../../components/ui/Badge'
+import { PageHeader } from '../../components/ui/PageHeader'
 import type { ReportData, ReportStatus, WeeklyReport } from './types'
 
 interface Team {
@@ -10,12 +14,12 @@ interface Team {
   department: string
 }
 
-const statusColors: Record<ReportStatus, string> = {
-  draft: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-  submitted: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  reviewed: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-  approved: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-  rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+const statusTones: Record<ReportStatus, 'gray' | 'blue' | 'purple' | 'green' | 'red'> = {
+  draft: 'gray',
+  submitted: 'blue',
+  reviewed: 'purple',
+  approved: 'green',
+  rejected: 'red',
 }
 
 const dataFields: { key: keyof ReportData; label: string; multiline?: boolean }[] = [
@@ -47,20 +51,15 @@ function ReportDataFields({
           onChange({ ...data, [key]: key === 'headcount' ? (v ? Number(v) : undefined) : v })
         return (
           <div key={key} className={multiline ? 'sm:col-span-2 space-y-1' : 'space-y-1'}>
-            <label className="text-sm text-gray-600">{label}</label>
+            <label className="text-sm text-gray-600 dark:text-gray-400">{label}</label>
             {multiline ? (
-              <textarea
-                value={stringValue}
-                onChange={(e) => update(e.target.value)}
-                rows={2}
-                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
-              />
+              <textarea value={stringValue} onChange={(e) => update(e.target.value)} rows={2} className="field" />
             ) : (
               <input
                 type={key === 'headcount' ? 'number' : 'text'}
                 value={stringValue}
                 onChange={(e) => update(e.target.value)}
-                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+                className="field"
               />
             )}
           </div>
@@ -101,29 +100,37 @@ function CreateReportForm({ teams, onCreated }: { teams: Team[]; onCreated: (r: 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+    <CardForm onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
       <div className="space-y-1">
-        <label className="text-sm text-gray-600">Team</label>
-        <select required value={teamId} onChange={(e) => setTeamId(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5 text-sm">
+        <label className="text-sm text-gray-600 dark:text-gray-400">Team</label>
+        <select required value={teamId} onChange={(e) => setTeamId(e.target.value)} className="field">
           <option value="">Select…</option>
           {teams.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
           ))}
         </select>
       </div>
       <div className="space-y-1">
-        <label className="text-sm text-gray-600">Period start</label>
-        <input type="date" required value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5 text-sm" />
+        <label className="text-sm text-gray-600 dark:text-gray-400">Period start</label>
+        <input
+          type="date"
+          required
+          value={periodStart}
+          onChange={(e) => setPeriodStart(e.target.value)}
+          className="field"
+        />
       </div>
       <div className="space-y-1">
-        <label className="text-sm text-gray-600">Period end</label>
-        <input type="date" required value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5 text-sm" />
+        <label className="text-sm text-gray-600 dark:text-gray-400">Period end</label>
+        <input type="date" required value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} className="field" />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={submitting} className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <Button type="submit" variant="primary" disabled={submitting}>
         {submitting ? 'Creating…' : 'New report'}
-      </button>
-    </form>
+      </Button>
+    </CardForm>
   )
 }
 
@@ -176,17 +183,15 @@ function ReportCard({ report, onUpdated }: { report: WeeklyReport; onUpdated: (r
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 
   return (
-    <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+    <Card>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <span className="font-medium">{report.team}</span>
-          <span className="ml-2 text-sm text-gray-500">
+          <span className="font-medium text-gray-900 dark:text-white">{report.team}</span>
+          <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
             {dateFmt(report.periodStart)} – {dateFmt(report.periodEnd)}
           </span>
         </div>
-        <span className={`rounded px-2 py-0.5 text-xs font-medium ${statusColors[report.status]}`}>
-          {report.status}
-        </span>
+        <Badge tone={statusTones[report.status]}>{report.status}</Badge>
       </div>
 
       {report.data.managerComments && (
@@ -198,95 +203,76 @@ function ReportCard({ report, onUpdated }: { report: WeeklyReport; onUpdated: (r
       {editing ? (
         <div className="mt-3 space-y-3">
           <ReportDataFields data={data} onChange={setData} />
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => transition('save', { data })}
-              disabled={busy}
-              className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-900"
-            >
+            <Button size="sm" onClick={() => transition('save', { data })} disabled={busy}>
               Save draft
-            </button>
-            <button
-              onClick={() => transition('submit', { data })}
-              disabled={busy}
-              className="rounded bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-50"
-            >
+            </Button>
+            <Button size="sm" variant="primary" onClick={() => transition('submit', { data })} disabled={busy}>
               Submit
-            </button>
-            <button
-              onClick={() => setEditing(false)}
-              className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-            >
+            </Button>
+            <Button size="sm" onClick={() => setEditing(false)}>
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           {canEdit && (
-            <button
-              onClick={() => setEditing(true)}
-              className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-            >
+            <Button size="sm" onClick={() => setEditing(true)}>
               Edit
-            </button>
+            </Button>
           )}
           {report.status === 'rejected' && (
-            <button
-              onClick={() => transition('reopen')}
-              disabled={busy}
-              className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-900"
-            >
+            <Button size="sm" onClick={() => transition('reopen')} disabled={busy}>
               Reopen as draft
-            </button>
+            </Button>
           )}
           {isReviewer && report.status === 'submitted' && (
-            <button
+            <Button
+              size="sm"
               onClick={() => transition('review')}
               disabled={busy}
-              className="rounded bg-purple-600 px-3 py-1.5 text-sm text-white hover:bg-purple-700 disabled:opacity-50"
+              className="!border-purple-300 !bg-purple-600 !text-white hover:!bg-purple-700 dark:!border-purple-800"
             >
               Mark reviewed
-            </button>
+            </Button>
           )}
           {isReviewer && report.status === 'reviewed' && (
-            <button
-              onClick={() => transition('approve')}
-              disabled={busy}
-              className="rounded bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-50"
-            >
+            <Button size="sm" variant="primary" onClick={() => transition('approve')} disabled={busy}>
               Approve
-            </button>
+            </Button>
           )}
           {isReviewer && (report.status === 'submitted' || report.status === 'reviewed') && (
-            <button
+            <Button
+              size="sm"
+              variant="danger"
               onClick={() => {
                 const reason = window.prompt('Reason for rejecting this report:')
                 if (reason === null) return // cancelled
                 transition('reject', reason ? { comment: reason } : undefined)
               }}
               disabled={busy}
-              className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
             >
               Reject
-            </button>
+            </Button>
           )}
-          <span className="mx-1 self-center text-gray-300">|</span>
+          <span className="mx-1 self-center text-gray-300 dark:text-gray-700">|</span>
           {(['csv', 'xlsx', 'pdf'] as const).map((format) => (
-            <button
+            <Button
               key={format}
+              size="sm"
               onClick={() => handleExport(format)}
               disabled={exporting === format}
-              className="rounded border border-gray-300 px-3 py-1.5 text-sm uppercase hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-900"
+              className="uppercase"
             >
               {exporting === format ? '…' : format}
-            </button>
+            </Button>
           ))}
         </div>
       )}
-      {!editing && error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-    </div>
+      {!editing && error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
+    </Card>
   )
 }
 
@@ -299,10 +285,7 @@ export function ReportsPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([
-      api.get<WeeklyReport[]>('/reports'),
-      api.get<{ teams: Team[] }>('/directory'),
-    ])
+    Promise.all([api.get<WeeklyReport[]>('/reports'), api.get<{ teams: Team[] }>('/directory')])
       .then(([r, dir]) => {
         setReports(r)
         setTeams(dir.teams)
@@ -313,10 +296,10 @@ export function ReportsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Weekly Reports</h1>
+      <PageHeader title="Weekly Reports" />
 
       {canCreate && (
-        <div className="mt-4">
+        <div className="mb-4">
           <CreateReportForm teams={teams} onCreated={(r) => setReports((prev) => (prev ? [r, ...prev] : [r]))} />
         </div>
       )}

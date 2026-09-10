@@ -1,5 +1,7 @@
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState'
 import { useApiData } from '../../hooks/useApiData'
+import { Card } from '../../components/ui/Card'
+import { PageHeader } from '../../components/ui/PageHeader'
 import type { AuditLogEntry } from './types'
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila' })
@@ -9,40 +11,47 @@ export function AuditLogsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Audit Logs</h1>
+      <PageHeader title="Audit Logs" />
 
       {loading && <LoadingState />}
       {error && <ErrorState message={error} />}
       {data && data.length === 0 && <EmptyState label="No administrative actions recorded yet." />}
 
       {data && data.length > 0 && (
-        <div className="mt-4 overflow-x-auto">
+        <Card className="overflow-x-auto !p-0">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-800">
-                <th className="py-2 pr-4 font-medium">When</th>
-                <th className="py-2 pr-4 font-medium">User</th>
-                <th className="py-2 pr-4 font-medium">Action</th>
-                <th className="py-2 pr-4 font-medium">Resource</th>
-                <th className="py-2 font-medium">Result</th>
+              <tr className="border-b border-black/5 text-xs uppercase tracking-wide text-gray-500 dark:border-white/10 dark:text-gray-400">
+                <th className="py-3 pl-4 pr-4 font-medium">When</th>
+                <th className="py-3 pr-4 font-medium">User</th>
+                <th className="py-3 pr-4 font-medium">Action</th>
+                <th className="py-3 pr-4 font-medium">Resource</th>
+                <th className="py-3 pr-4 font-medium">Result</th>
               </tr>
             </thead>
             <tbody>
               {data.map((log) => (
-                <tr key={log.id} className="border-b border-gray-100 dark:border-gray-800">
-                  <td className="py-2 pr-4 text-gray-500">{dateFormatter.format(new Date(log.createdAt))}</td>
-                  <td className="py-2 pr-4">{log.user}</td>
-                  <td className="py-2 pr-4">{log.action}</td>
-                  <td className="py-2 pr-4">
-                    {log.resource}
-                    {log.resourceId && <span className="text-gray-400"> #{log.resourceId.slice(0, 8)}</span>}
+                <tr
+                  key={log.id}
+                  className="border-b border-black/5 transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/5 dark:hover:bg-white/[0.03]"
+                >
+                  <td className="py-2.5 pl-4 pr-4 text-gray-500 dark:text-gray-400">
+                    {dateFormatter.format(new Date(log.createdAt))}
                   </td>
-                  <td className="py-2">
+                  <td className="py-2.5 pr-4 text-gray-900 dark:text-gray-200">{log.user}</td>
+                  <td className="py-2.5 pr-4">{log.action}</td>
+                  <td className="py-2.5 pr-4">
+                    {log.resource}
+                    {log.resourceId && (
+                      <span className="text-gray-400 dark:text-gray-500"> #{log.resourceId.slice(0, 8)}</span>
+                    )}
+                  </td>
+                  <td className="py-2.5 pr-4">
                     <span
                       className={
                         log.result === 'success'
-                          ? 'text-green-700 dark:text-green-500'
-                          : 'text-red-600 dark:text-red-400'
+                          ? 'font-medium text-brand-700 dark:text-brand-400'
+                          : 'font-medium text-red-600 dark:text-red-400'
                       }
                     >
                       {log.result}
@@ -52,7 +61,7 @@ export function AuditLogsPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
     </div>
   )

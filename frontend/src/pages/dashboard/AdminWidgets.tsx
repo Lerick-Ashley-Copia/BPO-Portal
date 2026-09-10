@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiError } from '../../services/api'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
+import { Card } from '../../components/ui/Card'
 import type { AuditLogEntry } from '../audit-logs/types'
 
 interface Stats {
@@ -10,6 +11,16 @@ interface Stats {
 }
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila' })
+
+function StatCard({ value, label }: { value: number; label: string }) {
+  return (
+    <Card className="relative overflow-hidden pl-5">
+      <div className="absolute inset-y-0 left-0 w-1 bg-brand-500" />
+      <div className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{value}</div>
+      <div className="text-sm text-gray-500 dark:text-gray-400">{label}</div>
+    </Card>
+  )
+}
 
 export function AdminWidgets() {
   const [stats, setStats] = useState<Stats | null>(null)
@@ -37,37 +48,34 @@ export function AdminWidgets() {
 
   return (
     <section className="mt-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
         Admin Overview
       </h2>
       <div className="mt-2 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-          <div className="text-2xl font-semibold">{stats.employeeCount}</div>
-          <div className="text-sm text-gray-500">Total Employees</div>
-        </div>
-        <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-          <div className="text-2xl font-semibold">{stats.teamCount}</div>
-          <div className="text-sm text-gray-500">Active Teams</div>
-        </div>
+        <StatCard value={stats.employeeCount} label="Total Employees" />
+        <StatCard value={stats.teamCount} label="Active Teams" />
       </div>
 
       {recentActions && recentActions.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <Card className="mt-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             Recent Administrative Actions
           </h3>
-          <ul className="mt-2 space-y-1 text-sm">
+          <ul className="mt-2 divide-y divide-black/5 text-sm dark:divide-white/10">
             {recentActions.map((log) => (
-              <li key={log.id} className="text-gray-600 dark:text-gray-400">
-                <span className="text-gray-400">{dateFormatter.format(new Date(log.createdAt))}</span>{' '}
-                {log.user} — {log.action} {log.resource}
+              <li key={log.id} className="py-1.5 text-gray-600 first:pt-0 last:pb-0 dark:text-gray-400">
+                <span className="text-gray-400 dark:text-gray-500">{dateFormatter.format(new Date(log.createdAt))}</span>{' '}
+                <span className="text-gray-900 dark:text-gray-200">{log.user}</span> — {log.action} {log.resource}
               </li>
             ))}
           </ul>
-          <Link to="/audit-logs" className="mt-2 inline-block text-sm text-green-600">
+          <Link
+            to="/audit-logs"
+            className="mt-3 inline-block text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+          >
             View all audit logs →
           </Link>
-        </div>
+        </Card>
       )}
     </section>
   )

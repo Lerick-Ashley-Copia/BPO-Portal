@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { api, ApiError } from '../../services/api'
+import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
 
 export function ForgotPasswordPage() {
   const { user } = useAuth()
@@ -27,44 +29,47 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center">
-      <div className="w-full max-w-sm space-y-4 p-6">
-        <h1 className="text-xl font-semibold">Reset your password</h1>
-        {sent ? (
-          <p className="text-sm text-gray-600">
-            If that email is registered, a reset link is on its way. Check your inbox.
+    <div className="flex min-h-svh items-center justify-center px-4">
+      <Card className="w-full max-w-sm !p-8 shadow-xl">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <img src="/favicon.png" alt="" className="h-12 w-12" />
+          <h1 className="mt-3 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Reset your password
+          </h1>
+        </div>
+        <div className="space-y-4">
+          {sent ? (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              If that email is registered, a reset link is on its way. Check your inbox.
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label htmlFor="email" className="text-sm text-gray-600 dark:text-gray-400">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="field"
+                />
+              </div>
+              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+              <Button type="submit" variant="primary" disabled={submitting} className="w-full">
+                {submitting ? 'Sending…' : 'Send reset link'}
+              </Button>
+            </form>
+          )}
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+            <Link to="/login" className="text-brand-600 hover:underline dark:text-brand-400">
+              Back to sign in
+            </Link>
           </p>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label htmlFor="email" className="text-sm text-gray-600">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-2"
-              />
-            </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded bg-green-600 px-3 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
-            >
-              {submitting ? 'Sending…' : 'Send reset link'}
-            </button>
-          </form>
-        )}
-        <p className="text-sm text-gray-500">
-          <Link to="/login" className="text-green-600 hover:underline">
-            Back to sign in
-          </Link>
-        </p>
-      </div>
+        </div>
+      </Card>
     </div>
   )
 }

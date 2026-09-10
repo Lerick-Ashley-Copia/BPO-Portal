@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import type { Role } from '../auth/types'
 import { api, ApiError } from '../services/api'
+import { Button } from '../components/ui/Button'
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
@@ -30,12 +31,12 @@ function RoleSwitcher() {
   if (!user?.roles.includes('admin')) return null
 
   return (
-    <label className="flex shrink-0 items-center gap-1.5 text-sm text-gray-500">
+    <label className="flex shrink-0 items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
       View as:
       <select
         value={viewAsRole ?? ''}
         onChange={(e) => setViewAsRole(e.target.value ? (e.target.value as Role) : null)}
-        className="rounded border border-gray-300 bg-transparent px-1.5 py-1 text-sm dark:border-gray-700"
+        className="rounded-md border border-gray-300 bg-white/70 px-1.5 py-1 text-sm dark:border-white/15 dark:bg-white/5"
       >
         <option value="">My role (Admin)</option>
         {roleOptions.map((r) => (
@@ -69,13 +70,9 @@ function CheckOutButton() {
   if (!attendanceStatus?.checkedIn || attendanceStatus.checkedOut || attendanceStatus.status === 'absent') return null
 
   return (
-    <button
-      onClick={handleCheckOut}
-      disabled={checkingOut}
-      className="shrink-0 rounded border border-gray-300 px-3 py-1 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
-    >
+    <Button size="sm" onClick={handleCheckOut} disabled={checkingOut} className="shrink-0">
       {checkingOut ? 'Checking out…' : 'Check Out'}
-    </button>
+    </Button>
   )
 }
 
@@ -87,30 +84,36 @@ export function PortalLayout() {
 
   return (
     <div className="min-h-svh flex flex-col">
-      <header className="border-b border-gray-200 dark:border-gray-800">
+      <header className="sticky top-0 z-40 border-b border-black/5 bg-white/75 backdrop-blur-md dark:border-white/10 dark:bg-brand-950/75">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-          <span className="min-w-0 truncate font-semibold">BPO Portal</span>
+          <div className="flex min-w-0 shrink-0 items-center gap-2">
+            <img src="/favicon.png" alt="" className="h-7 w-7 shrink-0" />
+            <span className="min-w-0 truncate text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+              BPO Portal
+            </span>
+          </div>
           <div className="flex shrink-0 flex-wrap items-center gap-3 text-sm sm:gap-4">
             <RoleSwitcher />
-            <span className="max-w-[40vw] truncate text-gray-500 sm:max-w-none">{user?.email}</span>
+            <span className="max-w-[40vw] truncate text-gray-500 dark:text-gray-400 sm:max-w-none">
+              {user?.email}
+            </span>
             <CheckOutButton />
-            <button
-              onClick={logout}
-              className="shrink-0 rounded border border-gray-300 px-3 py-1 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-            >
+            <Button size="sm" onClick={logout} className="shrink-0">
               Log out
-            </button>
+            </Button>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-6xl gap-4 overflow-x-auto px-4 pb-3 text-sm">
+        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-2 text-sm">
           {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                'shrink-0 ' +
-                (isActive ? 'font-medium text-green-600' : 'text-gray-600 hover:text-gray-900')
+                'shrink-0 rounded-md px-3 py-1.5 font-medium transition ' +
+                (isActive
+                  ? 'bg-brand-600/10 text-brand-700 dark:bg-brand-400/10 dark:text-brand-400'
+                  : 'text-gray-600 hover:bg-black/5 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white')
               }
             >
               {item.label}

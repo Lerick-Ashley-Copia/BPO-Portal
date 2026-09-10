@@ -2,6 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
+import { Card, CardForm } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { PageHeader } from '../../components/ui/PageHeader'
 import type { Department, EmployeeRecord, MyEmployeeProfile, Team } from './types'
 
 // dateHired is a date-only value with no meaningful time-of-day, so
@@ -34,7 +37,7 @@ function MyProfile() {
   if (loading) return <LoadingState />
   if (error) return <ErrorState message={error} />
   if (notFound) {
-    return <p className="text-sm text-gray-500">No employee profile on file for your account yet.</p>
+    return <p className="text-sm text-gray-500 dark:text-gray-400">No employee profile on file for your account yet.</p>
   }
   if (!profile) return null
 
@@ -49,17 +52,17 @@ function MyProfile() {
   ]
 
   return (
-    <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-      <h3 className="font-medium">{profile.name}</h3>
-      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
+    <Card>
+      <h3 className="font-medium text-gray-900 dark:text-white">{profile.name}</h3>
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
         {fields.map(([label, value]) => (
           <div key={label}>
-            <dt className="text-gray-500">{label}</dt>
-            <dd>{value}</dd>
+            <dt className="text-xs text-gray-500 dark:text-gray-400">{label}</dt>
+            <dd className="mt-0.5 text-gray-900 dark:text-gray-200">{value}</dd>
           </div>
         ))}
       </dl>
-    </div>
+    </Card>
   )
 }
 
@@ -108,48 +111,41 @@ function EmployeeRow({
 
   if (!editing) {
     return (
-      <tr className="border-b border-gray-100 dark:border-gray-800">
-        <td className="py-2 pr-4">
-          <div className="font-medium">{employee.name}</div>
-          <div className="text-xs text-gray-500">{employee.email}</div>
+      <tr className="border-b border-black/5 transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/5 dark:hover:bg-white/[0.03]">
+        <td className="py-2.5 pl-4 pr-4">
+          <div className="font-medium text-gray-900 dark:text-white">{employee.name}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{employee.email}</div>
         </td>
-        <td className="py-2 pr-4">{employee.position ?? '—'}</td>
-        <td className="py-2 pr-4">{employee.department ?? '—'}</td>
-        <td className="py-2 pr-4">{employee.team ?? '—'}</td>
-        <td className="py-2 pr-4">{employee.status}</td>
-        <td className="py-2">
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-          >
+        <td className="py-2.5 pr-4">{employee.position ?? '—'}</td>
+        <td className="py-2.5 pr-4">{employee.department ?? '—'}</td>
+        <td className="py-2.5 pr-4">{employee.team ?? '—'}</td>
+        <td className="py-2.5 pr-4">{employee.status}</td>
+        <td className="py-2.5 pr-4">
+          <Button size="sm" onClick={() => setEditing(true)}>
             Edit
-          </button>
+          </Button>
         </td>
       </tr>
     )
   }
 
   return (
-    <tr className="border-b border-gray-100 dark:border-gray-800">
-      <td className="py-2 pr-4 align-top">
-        <div className="font-medium">{employee.name}</div>
-        <div className="text-xs text-gray-500">{employee.email}</div>
+    <tr className="border-b border-black/5 dark:border-white/5">
+      <td className="py-2.5 pl-4 pr-4 align-top">
+        <div className="font-medium text-gray-900 dark:text-white">{employee.name}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">{employee.email}</div>
       </td>
-      <td className="py-2 pr-4 align-top">
-        <input
-          value={position}
-          onChange={(e) => setPosition(e.target.value)}
-          className="w-32 rounded border border-gray-300 px-2 py-1 text-sm"
-        />
+      <td className="py-2.5 pr-4 align-top">
+        <input value={position} onChange={(e) => setPosition(e.target.value)} className="field w-32 py-1" />
       </td>
-      <td className="py-2 pr-4 align-top">
+      <td className="py-2.5 pr-4 align-top">
         <select
           value={departmentId}
           onChange={(e) => {
             setDepartmentId(e.target.value)
             setTeamId('')
           }}
-          className="rounded border border-gray-300 px-2 py-1 text-sm"
+          className="field py-1"
         >
           <option value="">—</option>
           {departments.map((d) => (
@@ -159,12 +155,8 @@ function EmployeeRow({
           ))}
         </select>
       </td>
-      <td className="py-2 pr-4 align-top">
-        <select
-          value={teamId}
-          onChange={(e) => setTeamId(e.target.value)}
-          className="rounded border border-gray-300 px-2 py-1 text-sm"
-        >
+      <td className="py-2.5 pr-4 align-top">
+        <select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="field py-1">
           <option value="">—</option>
           {teamsInDepartment.map((t) => (
             <option key={t.id} value={t.id}>
@@ -173,12 +165,8 @@ function EmployeeRow({
           ))}
         </select>
       </td>
-      <td className="py-2 pr-4 align-top">
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="rounded border border-gray-300 px-2 py-1 text-sm"
-        >
+      <td className="py-2.5 pr-4 align-top">
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="field py-1">
           {statusOptions.map((s) => (
             <option key={s} value={s}>
               {s}
@@ -186,22 +174,15 @@ function EmployeeRow({
           ))}
         </select>
       </td>
-      <td className="py-2 align-top">
+      <td className="py-2.5 pr-4 align-top">
         <div className="flex flex-col gap-1">
-          <button
-            onClick={save}
-            disabled={saving}
-            className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 disabled:opacity-50"
-          >
+          <Button size="sm" variant="primary" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-          >
+          </Button>
+          <Button size="sm" onClick={() => setEditing(false)}>
             Cancel
-          </button>
-          {error && <span className="text-xs text-red-600">{error}</span>}
+          </Button>
+          {error && <span className="text-xs text-red-600 dark:text-red-400">{error}</span>}
         </div>
       </td>
     </tr>
@@ -249,34 +230,36 @@ function CreateTeamOrDepartment({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+    <CardForm onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
       <div className="space-y-1">
-        <label className="text-sm text-gray-600">Type</label>
-        <select value={kind} onChange={(e) => setKind(e.target.value as 'department' | 'team')} className="rounded border border-gray-300 px-2 py-1.5 text-sm">
+        <label className="text-sm text-gray-600 dark:text-gray-400">Type</label>
+        <select value={kind} onChange={(e) => setKind(e.target.value as 'department' | 'team')} className="field">
           <option value="department">Department</option>
           <option value="team">Team</option>
         </select>
       </div>
       <div className="space-y-1">
-        <label className="text-sm text-gray-600">Name</label>
-        <input required value={name} onChange={(e) => setName(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5 text-sm" />
+        <label className="text-sm text-gray-600 dark:text-gray-400">Name</label>
+        <input required value={name} onChange={(e) => setName(e.target.value)} className="field" />
       </div>
       {kind === 'team' && (
         <div className="space-y-1">
-          <label className="text-sm text-gray-600">Department</label>
-          <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5 text-sm">
+          <label className="text-sm text-gray-600 dark:text-gray-400">Department</label>
+          <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className="field">
             <option value="">Select…</option>
             {departments.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
             ))}
           </select>
         </div>
       )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={submitting} className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <Button type="submit" variant="primary" disabled={submitting}>
         {submitting ? 'Creating…' : 'Create'}
-      </button>
-    </form>
+      </Button>
+    </CardForm>
   )
 }
 
@@ -321,20 +304,20 @@ function EmployeeDirectory() {
       )}
 
       {(!employees || employees.length === 0) && (
-        <p className="text-sm text-gray-500">No employee records yet.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">No employee records yet.</p>
       )}
 
       {employees && employees.length > 0 && (
-        <div className="overflow-x-auto">
+        <Card className="overflow-x-auto !p-0">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-800">
-                <th className="py-2 pr-4 font-medium">Employee</th>
-                <th className="py-2 pr-4 font-medium">Position</th>
-                <th className="py-2 pr-4 font-medium">Department</th>
-                <th className="py-2 pr-4 font-medium">Team</th>
-                <th className="py-2 pr-4 font-medium">Status</th>
-                <th className="py-2 font-medium">Actions</th>
+              <tr className="border-b border-black/5 text-xs uppercase tracking-wide text-gray-500 dark:border-white/10 dark:text-gray-400">
+                <th className="py-3 pl-4 pr-4 font-medium">Employee</th>
+                <th className="py-3 pr-4 font-medium">Position</th>
+                <th className="py-3 pr-4 font-medium">Department</th>
+                <th className="py-3 pr-4 font-medium">Team</th>
+                <th className="py-3 pr-4 font-medium">Status</th>
+                <th className="py-3 pr-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -351,7 +334,7 @@ function EmployeeDirectory() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
     </div>
   )
@@ -363,10 +346,12 @@ export function HrisPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">HRIS</h1>
+      <PageHeader title="HRIS" />
 
-      <section className="mt-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">My Profile</h2>
+      <section>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          My Profile
+        </h2>
         <div className="mt-2">
           <MyProfile />
         </div>
@@ -374,7 +359,7 @@ export function HrisPage() {
 
       {canManage && (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             Employee Directory
           </h2>
           <div className="mt-2">
