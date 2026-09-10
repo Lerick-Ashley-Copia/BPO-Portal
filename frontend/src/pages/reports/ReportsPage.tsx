@@ -186,7 +186,7 @@ function ReportCard({ report, onUpdated }: { report: WeeklyReport; onUpdated: (r
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <span className="font-medium text-gray-900 dark:text-white">{report.team}</span>
+          <span className="font-medium text-gray-900 dark:text-gray-100">{report.team}</span>
           <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
             {dateFmt(report.periodStart)} – {dateFmt(report.periodEnd)}
           </span>

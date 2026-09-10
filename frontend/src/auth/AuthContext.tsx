@@ -194,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {pendingAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
           <Card className="w-full max-w-sm !bg-white shadow-xl dark:!bg-brand-950">
-            <h2 className="font-semibold text-gray-900 dark:text-white">Action not allowed for this role</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Action not allowed for this role</h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               The role you're viewing as ({viewAsRole ? roleLabels[viewAsRole] : ''}) can't do this.
               You're really an Administrator — proceed anyway?

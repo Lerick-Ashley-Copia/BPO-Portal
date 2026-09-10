@@ -51,13 +51,24 @@ body {
   min-height: 100svh;
 }
 
+.dark {
+  color-scheme: dark;
+}
+
+/* Was near-black (#04140c). Pure-white text on a background that dark
+   is its own eye-strain problem independent of "too bright" — the
+   extreme contrast causes a glow/halation effect that's tiring to
+   read for long stretches, which is exactly what got reported after
+   the brightness fix. Lifted the floor and paired it with off-white
+   (not pure #fff) body text. */
 .dark body {
-  background-color: #04140c;
+  background-color: #0b241a;
   background-image:
     radial-gradient(circle at 15% 0%, rgba(34, 171, 104, 0.16) 0%, transparent 45%),
     radial-gradient(circle at 85% 100%, rgba(34, 171, 104, 0.1) 0%, transparent 45%),
-    radial-gradient(circle at 50% 0%, #0d3521 0%, #04140c 60%);
+    radial-gradient(circle at 50% 0%, #143f2a 0%, #0b241a 60%);
   background-attachment: fixed;
+  color: #e5e7eb;
 }
 
 ::selection {
@@ -99,6 +110,6 @@ body {
      one-off HTML attributes: type=date, min, max, rows…), so this is
      applied as a plain utility class instead. */
   .field {
-    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 dark:border-white/15 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-gray-500;
+    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 dark:border-white/15 dark:bg-white/[0.04] dark:text-gray-100 dark:placeholder:text-gray-500;
   }
 }

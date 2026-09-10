@@ -192,7 +192,7 @@ export function DocumentsPage() {
                 {docs.map((doc) => (
                   <li key={doc.id}>
                     <Card className="flex items-center justify-between !py-3">
-                      <span className="font-medium text-gray-900 dark:text-white">{doc.title}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{doc.title}</span>
                       <Button size="sm" onClick={() => handleDownload(doc.id)} disabled={downloadingId === doc.id}>
                         {downloadingId === doc.id ? 'Preparing…' : 'Download'}
                       </Button>

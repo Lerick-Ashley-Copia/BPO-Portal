@@ -63,7 +63,7 @@ export function DashboardPage() {
               {latest.map((announcement) => (
                 <li key={announcement.id}>
                   <Card>
-                    <h3 className="font-medium text-gray-900 dark:text-white">{announcement.title}</h3>
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{announcement.title}</h3>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{announcement.content}</p>
                   </Card>
                 </li>

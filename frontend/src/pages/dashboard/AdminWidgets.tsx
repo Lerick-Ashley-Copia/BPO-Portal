@@ -16,7 +16,7 @@ function StatCard({ value, label }: { value: number; label: string }) {
   return (
     <Card className="relative overflow-hidden pl-5">
       <div className="absolute inset-y-0 left-0 w-1 bg-brand-500" />
-      <div className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{value}</div>
+      <div className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">{value}</div>
       <div className="text-sm text-gray-500 dark:text-gray-400">{label}</div>
     </Card>
   )

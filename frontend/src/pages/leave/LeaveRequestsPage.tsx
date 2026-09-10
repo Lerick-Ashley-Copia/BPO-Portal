@@ -106,7 +106,7 @@ function ReviewRow({ request, onReviewed }: { request: LeaveRequest; onReviewed:
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <span className="font-medium text-gray-900 dark:text-white">{request.employeeName}</span>
+            <span className="font-medium text-gray-900 dark:text-gray-100">{request.employeeName}</span>
             <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
               {dateFmt(request.startDate)} – {dateFmt(request.endDate)} ({request.days} day
               {request.days === 1 ? '' : 's'})

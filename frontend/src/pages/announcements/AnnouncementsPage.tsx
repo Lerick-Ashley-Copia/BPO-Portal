@@ -150,7 +150,7 @@ function AnnouncementItem({
     <li>
       <Card>
         <div className="flex items-baseline justify-between gap-4">
-          <h2 className="font-medium text-gray-900 dark:text-white">{announcement.title}</h2>
+          <h2 className="font-medium text-gray-900 dark:text-gray-100">{announcement.title}</h2>
           {announcement.publishAt && (
             <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
               {dateFormatter.format(new Date(announcement.publishAt))}

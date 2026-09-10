@@ -195,7 +195,7 @@ function BenefitCard({
 
   return (
     <Card>
-      <h3 className="font-medium text-gray-900 dark:text-white">{benefit.title}</h3>
+      <h3 className="font-medium text-gray-900 dark:text-gray-100">{benefit.title}</h3>
       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{benefit.description}</p>
       {benefit.eligibility && (
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Eligibility: {benefit.eligibility}</p>

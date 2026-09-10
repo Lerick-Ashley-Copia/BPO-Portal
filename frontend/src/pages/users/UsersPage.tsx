@@ -334,7 +334,7 @@ function UserRow({
     return (
       <tr className="border-b border-black/5 align-top transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/5 dark:hover:bg-white/[0.03]">
         <td className="py-2.5 pl-4 pr-4">
-          <div className="font-medium text-gray-900 dark:text-white">{user.name}</div>
+          <div className="font-medium text-gray-900 dark:text-gray-100">{user.name}</div>
           <div className="text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
           {!user.passwordSet && (
             <Badge tone="amber" className="mt-1">
