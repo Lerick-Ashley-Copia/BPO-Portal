@@ -1,80 +1,16 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState'
 import { useApiData } from '../../hooks/useApiData'
 import { api, ApiError } from '../../services/api'
 import type { EmployeeRecord } from '../hris/types'
 import { formatDateOnly, formatManilaTime, todayInManilaIso } from '../../utils/dates'
-import { Card, CardForm } from '../../components/ui/Card'
+import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/ui/PageHeader'
 import type { AttendanceRecord } from './types'
 
 const timeFmt = formatManilaTime
-
-// For a day that already has a row in the table below, marking absent
-// is a row action (it already shows the exact employee + date — no
-// need to re-pick either). This form is only for the case a row
-// action can't cover: a day with no attendance record at all yet, so
-// there's nothing on screen to attach the action to.
-function MarkAbsentForm({ onMarked }: { onMarked: () => void }) {
-  const { guardedAction } = useAuth()
-  const { data: employees } = useApiData<EmployeeRecord[]>('/employees')
-  const [employeeId, setEmployeeId] = useState('')
-  const [date, setDate] = useState(todayInManilaIso())
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
-    if (!employeeId) {
-      setError('Select an employee')
-      return
-    }
-
-    guardedAction(['hr', 'admin'], async () => {
-      setSubmitting(true)
-      try {
-        await api.post('/leave/attendance/mark-absent', { employeeId, date })
-        const name = employees?.find((e) => e.id === employeeId)?.name ?? 'Employee'
-        setSuccess(`${name} marked absent for ${date}.`)
-        onMarked()
-      } catch (err) {
-        setError(err instanceof ApiError ? err.message : 'Could not mark absent')
-      } finally {
-        setSubmitting(false)
-      }
-    })
-  }
-
-  return (
-    <CardForm onSubmit={handleSubmit} className="mb-6 flex flex-wrap items-end gap-3">
-      <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400">
-        Employee
-        <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="field mt-1">
-          <option value="">Select…</option>
-          {employees?.map((emp) => (
-            <option key={emp.id} value={emp.id}>
-              {emp.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col text-sm text-gray-600 dark:text-gray-400">
-        Date
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="field mt-1" />
-      </label>
-      <Button type="submit" size="sm" disabled={submitting}>
-        {submitting ? 'Marking…' : 'Mark Absent (no record yet)'}
-      </Button>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-      {success && <p className="text-sm text-brand-700 dark:text-brand-400">{success}</p>}
-    </CardForm>
-  )
-}
 
 function MarkAbsentRowButton({ record, onMarked }: { record: AttendanceRecord; onMarked: () => void }) {
   const { guardedAction } = useAuth()
@@ -192,8 +128,6 @@ export function AttendancePage() {
       </Card>
       {rangeInvalid && <p className="mb-2 text-sm text-red-600 dark:text-red-400">"To" can't be before "From".</p>}
       {exportError && <p className="mb-2 text-sm text-red-600 dark:text-red-400">{exportError}</p>}
-
-      {isReviewer && <MarkAbsentForm onMarked={() => setReloadToken((t) => t + 1)} />}
 
       {loading && <LoadingState />}
       {error && <ErrorState message={error} />}
