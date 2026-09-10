@@ -121,6 +121,12 @@ async function handleCreate(req: AuthedRequest, res: VercelResponse) {
     select: userSelect,
   })
 
+  // Every account needs a matching Employee row to show up in
+  // HRIS/Attendance/Leave — created here so nobody ends up with a
+  // login but no employee profile (see employees.ts POST for backfilling
+  // accounts that predate this).
+  await prisma.employee.create({ data: { userId: user.id } })
+
   const token = randomBytes(32).toString('base64url')
   await prisma.passwordResetToken.create({
     data: { userId: user.id, token, expiresAt: new Date(Date.now() + SETUP_TOKEN_TTL_MS) },
@@ -188,14 +194,17 @@ async function handleDelete(req: AuthedRequest, res: VercelResponse, id: string)
     return
   }
 
-  // An Employee profile brings HR history with it (attendance, leave
-  // requests) — refuse rather than cascading that away. Setup-pending
-  // accounts with no profile yet (the common "undo a mistaken invite"
-  // case) delete cleanly.
-  const employee = await prisma.employee.findUnique({ where: { userId: id }, select: { id: true } })
-  if (employee) {
+  // Every account gets a bare Employee row automatically now, so its
+  // mere existence isn't a reason to block deletion — actual HR history
+  // (attendance/leave records) is. Refuse only when that history exists,
+  // rather than cascading it away.
+  const employee = await prisma.employee.findUnique({
+    where: { userId: id },
+    select: { id: true, _count: { select: { attendanceRecords: true, leaveRequests: true } } },
+  })
+  if (employee && (employee._count.attendanceRecords > 0 || employee._count.leaveRequests > 0)) {
     res.status(409).json({
-      message: 'This user has an employee profile with HR history and cannot be deleted. Remove the employee record first if it truly needs to go.',
+      message: 'This user has attendance/leave history and cannot be deleted.',
     })
     return
   }
@@ -203,6 +212,7 @@ async function handleDelete(req: AuthedRequest, res: VercelResponse, id: string)
   try {
     await prisma.$transaction([
       prisma.passwordResetToken.deleteMany({ where: { userId: id } }),
+      ...(employee ? [prisma.employee.delete({ where: { id: employee.id } })] : []),
       prisma.user.delete({ where: { id } }),
     ])
   } catch (err) {

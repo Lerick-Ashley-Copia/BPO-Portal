@@ -11,6 +11,13 @@ import { formatDisplayName } from '../lib/names.js'
 // PUT /employees/:id. The /me and /:id sub-paths are routed here via
 // vercel.json rewrites, arriving as ?sub=me or ?sub=<id>.
 
+const createSchema = z.object({
+  userId: z.string().min(1),
+  departmentId: z.string().uuid().nullable().optional(),
+  teamId: z.string().uuid().nullable().optional(),
+  position: z.string().min(1).nullable().optional(),
+})
+
 const updateSchema = z.object({
   position: z.string().min(1).optional(),
   status: z.enum(['active', 'on_leave', 'terminated']).optional(),
@@ -81,6 +88,39 @@ async function handleMe(req: AuthedRequest, res: VercelResponse) {
   res.status(200).json(serialize(employee))
 }
 
+// Every User account needs a matching Employee row to show up anywhere
+// in HRIS/Attendance/Leave — normally created automatically alongside
+// the User (see users.ts handleCreate). This covers backfilling it for
+// an account that predates that, or any other case where one's missing.
+async function handleCreate(req: AuthedRequest, res: VercelResponse) {
+  if (!isManager(req)) {
+    res.status(403).json({ message: 'Insufficient permissions' })
+    return
+  }
+  const parsed = createSchema.safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ message: 'Invalid employee payload' })
+    return
+  }
+
+  const { userId, ...rest } = parsed.data
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) {
+    res.status(404).json({ message: 'User not found' })
+    return
+  }
+
+  const existing = await prisma.employee.findUnique({ where: { userId } })
+  if (existing) {
+    res.status(409).json({ message: 'This user already has an employee profile' })
+    return
+  }
+
+  const employee = await prisma.employee.create({ data: { userId, ...rest }, ...employeeSelect })
+  logAudit(req.auth.sub, 'create', 'employee', employee.id)
+  res.status(201).json(serialize(employee))
+}
+
 async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string) {
   if (!isManager(req)) {
     res.status(403).json({ message: 'Insufficient permissions' })
@@ -109,6 +149,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
   const sub = typeof req.query.sub === 'string' ? req.query.sub : undefined
 
   if (!sub && req.method === 'GET') return handleList(req, res)
+  if (!sub && req.method === 'POST') return handleCreate(req, res)
   if (sub === 'me' && req.method === 'GET') return handleMe(req, res)
   if (sub && sub !== 'me' && req.method === 'PUT') return handleUpdate(req, res, sub)
 
