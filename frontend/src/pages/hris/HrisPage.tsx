@@ -298,6 +298,212 @@ function CreateTeamOrDepartment({
   )
 }
 
+function DepartmentRow({
+  department,
+  onUpdated,
+  onDeleted,
+}: {
+  department: Department
+  onUpdated: (d: Department) => void
+  onDeleted: (id: string) => void
+}) {
+  const { guardedAction } = useAuth()
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(department.name)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function save() {
+    guardedAction(['admin'], async () => {
+      setBusy(true)
+      setError(null)
+      try {
+        const updated = await api.put<Department>(`/directory/departments/${department.id}`, { name })
+        onUpdated(updated)
+        setEditing(false)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not rename')
+      } finally {
+        setBusy(false)
+      }
+    })
+  }
+
+  function remove() {
+    if (!window.confirm(`Delete the "${department.name}" department?`)) return
+    guardedAction(['admin'], async () => {
+      setBusy(true)
+      setError(null)
+      try {
+        await api.delete(`/directory/departments/${department.id}`)
+        onDeleted(department.id)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not delete')
+        setBusy(false)
+      }
+    })
+  }
+
+  return (
+    <li className="flex flex-wrap items-center gap-2 py-1.5">
+      {editing ? (
+        <>
+          <input value={name} onChange={(e) => setName(e.target.value)} className="field w-40 py-1" />
+          <Button size="sm" variant="primary" onClick={save} disabled={busy}>
+            {busy ? 'Saving…' : 'Save'}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              setName(department.name)
+              setEditing(false)
+            }}
+          >
+            Cancel
+          </Button>
+        </>
+      ) : (
+        <>
+          <span className="flex-1 text-gray-900 dark:text-gray-100">{department.name}</span>
+          <Button size="sm" onClick={() => setEditing(true)}>
+            Rename
+          </Button>
+          <Button size="sm" variant="danger" onClick={remove} disabled={busy}>
+            Delete
+          </Button>
+        </>
+      )}
+      {error && <span className="w-full text-xs text-red-600 dark:text-red-400">{error}</span>}
+    </li>
+  )
+}
+
+function TeamRow({
+  team,
+  onUpdated,
+  onDeleted,
+}: {
+  team: Team
+  onUpdated: (t: Team) => void
+  onDeleted: (id: string) => void
+}) {
+  const { guardedAction } = useAuth()
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(team.name)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function save() {
+    guardedAction(['admin'], async () => {
+      setBusy(true)
+      setError(null)
+      try {
+        const updated = await api.put<Team>(`/directory/teams/${team.id}`, { name })
+        onUpdated(updated)
+        setEditing(false)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not rename')
+      } finally {
+        setBusy(false)
+      }
+    })
+  }
+
+  function remove() {
+    if (!window.confirm(`Delete the "${team.name}" team?`)) return
+    guardedAction(['admin'], async () => {
+      setBusy(true)
+      setError(null)
+      try {
+        await api.delete(`/directory/teams/${team.id}`)
+        onDeleted(team.id)
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Could not delete')
+        setBusy(false)
+      }
+    })
+  }
+
+  return (
+    <li className="flex flex-wrap items-center gap-2 py-1.5">
+      {editing ? (
+        <>
+          <input value={name} onChange={(e) => setName(e.target.value)} className="field w-40 py-1" />
+          <Button size="sm" variant="primary" onClick={save} disabled={busy}>
+            {busy ? 'Saving…' : 'Save'}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              setName(team.name)
+              setEditing(false)
+            }}
+          >
+            Cancel
+          </Button>
+        </>
+      ) : (
+        <>
+          <span className="flex-1 text-gray-900 dark:text-gray-100">
+            {team.name} <span className="text-xs text-gray-500 dark:text-gray-400">— {team.department}</span>
+          </span>
+          <Button size="sm" onClick={() => setEditing(true)}>
+            Rename
+          </Button>
+          <Button size="sm" variant="danger" onClick={remove} disabled={busy}>
+            Delete
+          </Button>
+        </>
+      )}
+      {error && <span className="w-full text-xs text-red-600 dark:text-red-400">{error}</span>}
+    </li>
+  )
+}
+
+function DirectoryMaintenance({
+  departments,
+  teams,
+  onDepartmentUpdated,
+  onDepartmentDeleted,
+  onTeamUpdated,
+  onTeamDeleted,
+}: {
+  departments: Department[]
+  teams: Team[]
+  onDepartmentUpdated: (d: Department) => void
+  onDepartmentDeleted: (id: string) => void
+  onTeamUpdated: (t: Team) => void
+  onTeamDeleted: (id: string) => void
+}) {
+  if (departments.length === 0 && teams.length === 0) return null
+
+  return (
+    <Card className="mb-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        Departments &amp; Teams
+      </h3>
+      <div className="mt-2 grid gap-4 sm:grid-cols-2">
+        <div>
+          <h4 className="text-xs text-gray-500 dark:text-gray-400">Departments</h4>
+          <ul className="mt-1 divide-y divide-black/5 text-sm dark:divide-white/10">
+            {departments.map((d) => (
+              <DepartmentRow key={d.id} department={d} onUpdated={onDepartmentUpdated} onDeleted={onDepartmentDeleted} />
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-xs text-gray-500 dark:text-gray-400">Teams</h4>
+          <ul className="mt-1 divide-y divide-black/5 text-sm dark:divide-white/10">
+            {teams.map((t) => (
+              <TeamRow key={t.id} team={t} onUpdated={onTeamUpdated} onDeleted={onTeamDeleted} />
+            ))}
+          </ul>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 function EmployeeDirectory() {
   const { effectiveRoles } = useAuth()
   const isAdmin = effectiveRoles.includes('admin')
@@ -336,6 +542,19 @@ function EmployeeDirectory() {
             }}
           />
         </div>
+      )}
+
+      {isAdmin && (
+        <DirectoryMaintenance
+          departments={departments}
+          teams={teams}
+          onDepartmentUpdated={(updated) =>
+            setDepartments((prev) => prev.map((d) => (d.id === updated.id ? updated : d)))
+          }
+          onDepartmentDeleted={(id) => setDepartments((prev) => prev.filter((d) => d.id !== id))}
+          onTeamUpdated={(updated) => setTeams((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))}
+          onTeamDeleted={(id) => setTeams((prev) => prev.filter((t) => t.id !== id))}
+        />
       )}
 
       {(!employees || employees.length === 0) && (

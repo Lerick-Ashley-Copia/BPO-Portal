@@ -7,3 +7,9 @@ import { Prisma } from '@prisma/client'
 export function isNotFoundError(err: unknown): boolean {
   return err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025'
 }
+
+// Prisma throws P2002 on a unique-constraint violation (e.g. renaming
+// a department to a name another department already has).
+export function isUniqueConstraintError(err: unknown): boolean {
+  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002'
+}
