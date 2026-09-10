@@ -1,7 +1,5 @@
 import { useAuth } from '../../auth/AuthContext'
-
-const timeFmt = (d: string | null) =>
-  d ? new Date(d).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''
+import { formatManilaTime } from '../../utils/dates'
 
 // Check-in happens automatically on login (see AuthContext) — this is
 // just a passive, dismissible confirmation so it doesn't happen
@@ -29,7 +27,7 @@ export function CheckInPrompt() {
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 dark:border-green-900 dark:bg-green-950">
       <p className="font-medium">
-        You were checked in at {timeFmt(attendanceStatus?.checkInAt ?? null)}.
+        You were checked in at {formatManilaTime(attendanceStatus?.checkInAt ?? null)}.
       </p>
       <button
         onClick={dismissJustCheckedIn}

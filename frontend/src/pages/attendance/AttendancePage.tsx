@@ -4,11 +4,10 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncStat
 import { useApiData } from '../../hooks/useApiData'
 import { api, ApiError } from '../../services/api'
 import type { EmployeeRecord } from '../hris/types'
-import { formatDateOnly, todayInManilaIso } from '../../utils/dates'
+import { formatDateOnly, formatManilaTime, todayInManilaIso } from '../../utils/dates'
 import type { AttendanceRecord } from './types'
 
-const timeFmt = (d: string | null) =>
-  d ? new Date(d).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '—'
+const timeFmt = formatManilaTime
 
 function MarkAbsentForm({ onMarked }: { onMarked: () => void }) {
   const { guardedAction } = useAuth()

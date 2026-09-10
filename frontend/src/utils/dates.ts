@@ -25,3 +25,12 @@ export function todayInManilaIso(): string {
   const manila = new Date(Date.now() + MANILA_OFFSET_MS)
   return `${manila.getUTCFullYear()}-${String(manila.getUTCMonth() + 1).padStart(2, '0')}-${String(manila.getUTCDate()).padStart(2, '0')}`
 }
+
+// Check-in/check-out timestamps should always read as Manila wall-clock
+// time, not the viewer's browser/OS timezone — otherwise the same
+// check-in shows a different time to a reviewer in a different zone
+// than what the employee actually saw when they checked in.
+export function formatManilaTime(value: string | null): string {
+  if (!value) return '—'
+  return new Date(value).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' })
+}
