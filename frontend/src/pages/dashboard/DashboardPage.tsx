@@ -31,7 +31,7 @@ export function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+      <h1 className="text-2xl font-bold tracking-tight text-gold-600 dark:text-gold-400">
         Welcome{user?.firstName ? `, ${user.firstName}` : ''}
       </h1>
       {user && (

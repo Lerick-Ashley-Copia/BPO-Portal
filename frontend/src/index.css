@@ -18,6 +18,14 @@
   --color-brand-800: #0f5837;
   --color-brand-900: #0d472e;
   --color-brand-950: #05170f;
+
+  /* Gold, from the company's actual Facebook banner (bold gold
+     wordmark on the same dark green) — used for the brand wordmark
+     and page headings only, so it stays a distinct "this is branding"
+     color from brand-green's "this is actionable" (buttons/links). */
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f5a623;
+  --color-gold-600: #d97706;
 }
 
 :root {
@@ -58,6 +66,27 @@ body {
   h2,
   h3 {
     letter-spacing: -0.01em;
+  }
+
+  /* The popup list a <select> opens is a native browser surface, not
+     part of the page's own paint — it ignores translucent
+     dark:bg-white/[...] card backgrounds and any gradient behind them,
+     so it needs its own solid, opaque color or it defaults to plain
+     white-on-white regardless of the rest of the theme. !important
+     because this has to beat both our own .field component class and
+     any inline Tailwind utility background on a <select>. */
+  select,
+  select option {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  select,
+  select option {
+    background-color: #0f2a1c !important;
+    color: #ffffff !important;
   }
 }
 
