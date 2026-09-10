@@ -98,6 +98,7 @@ model LeaveRequest {
   endDate       DateTime
   days          Int
   reason        String?
+  useSil        Boolean            @default(false)
   status        LeaveRequestStatus @default(pending)
   reviewedBy    String?
   reviewComment String?

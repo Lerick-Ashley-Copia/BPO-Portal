@@ -28,6 +28,7 @@ const createLeaveSchema = z.object({
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
   reason: z.string().optional(),
+  useSil: z.boolean().optional(),
 })
 
 const reviewLeaveSchema = z.object({
@@ -57,6 +58,7 @@ async function handleListLeaveRequests(req: AuthedRequest, res: VercelResponse) 
       endDate: r.endDate,
       days: r.days,
       reason: r.reason,
+      useSil: r.useSil,
       status: r.status,
       reviewComment: r.reviewComment,
       createdAt: r.createdAt,
@@ -86,7 +88,14 @@ async function handleCreateLeaveRequest(req: AuthedRequest, res: VercelResponse)
   const days = inclusiveDayCount(startDate, endDate)
 
   const leaveRequest = await prisma.leaveRequest.create({
-    data: { employeeId: employee.id, startDate, endDate, days, reason: parsed.data.reason },
+    data: {
+      employeeId: employee.id,
+      startDate,
+      endDate,
+      days,
+      reason: parsed.data.reason,
+      useSil: parsed.data.useSil ?? false,
+    },
   })
 
   logAudit(req.auth.sub, 'create', 'leave_request', leaveRequest.id)
@@ -135,7 +144,7 @@ async function handleReviewLeaveRequest(req: AuthedRequest, res: VercelResponse,
   const nextStatus = action === 'approve' ? 'approved' : 'rejected'
 
   const updated = await prisma.$transaction(async (tx) => {
-    if (action === 'approve') {
+    if (action === 'approve' && leaveRequest.useSil) {
       await tx.employee.update({
         where: { id: leaveRequest.employeeId },
         data: { silBalance: { decrement: leaveRequest.days } },
@@ -172,10 +181,15 @@ function parseDateRange(req: AuthedRequest): { gte: Date; lte: Date } | null {
   return { gte: new Date(`${fromStr}T00:00:00.000Z`), lte: new Date(`${toStr}T00:00:00.000Z`) }
 }
 
+function parseEmployeeFilter(req: AuthedRequest): { employeeId: string } | Record<string, never> {
+  const employeeId = typeof req.query.employeeId === 'string' ? req.query.employeeId : undefined
+  return employeeId ? { employeeId } : {}
+}
+
 async function handleListAttendance(req: AuthedRequest, res: VercelResponse) {
   const scope = isHrOrAdmin(req) ? {} : { employee: { userId: req.auth.sub } }
   const range = parseDateRange(req)
-  const where = range ? { ...scope, date: range } : scope
+  const where = { ...scope, ...parseEmployeeFilter(req), ...(range ? { date: range } : {}) }
 
   const records = await prisma.attendanceRecord.findMany({
     where,
@@ -209,7 +223,7 @@ async function handleExportAttendance(req: AuthedRequest, res: VercelResponse) {
 
   const scope = isHrOrAdmin(req) ? {} : { employee: { userId: req.auth.sub } }
   const records = await prisma.attendanceRecord.findMany({
-    where: { ...scope, date: range },
+    where: { ...scope, ...parseEmployeeFilter(req), date: range },
     include: { employee: { include: { user: { select: { firstName: true, middleName: true, lastName: true } } } } },
     orderBy: [
       { date: 'asc' },

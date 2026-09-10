@@ -85,20 +85,44 @@ function MarkAbsentForm({ onMarked }: { onMarked: () => void }) {
   )
 }
 
+function EmployeeFilter({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  const { data: employees } = useApiData<EmployeeRecord[]>('/employees')
+
+  return (
+    <label className="flex flex-col text-sm">
+      Employee
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
+      >
+        <option value="">All employees</option>
+        {employees?.map((emp) => (
+          <option key={emp.id} value={emp.id}>
+            {emp.name}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
 export function AttendancePage() {
   const { effectiveRoles } = useAuth()
   const isReviewer = effectiveRoles.some((r) => r === 'hr' || r === 'admin')
 
   const [from, setFrom] = useState(todayInManilaIso())
   const [to, setTo] = useState(todayInManilaIso())
+  const [employeeId, setEmployeeId] = useState('')
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
   const rangeInvalid = to < from
-  const path = rangeInvalid
-    ? '/leave/attendance'
-    : `/leave/attendance?from=${from}&to=${to}${reloadToken ? `&_r=${reloadToken}` : ''}`
+  const params = new URLSearchParams({ from, to })
+  if (employeeId) params.set('employeeId', employeeId)
+  if (reloadToken) params.set('_r', String(reloadToken))
+  const path = rangeInvalid ? '/leave/attendance' : `/leave/attendance?${params.toString()}`
   const { data, loading, error } = useApiData<AttendanceRecord[]>(path)
 
   async function handleExport() {
@@ -106,7 +130,9 @@ export function AttendancePage() {
     setExporting(true)
     setExportError(null)
     try {
-      const { url } = await api.get<{ url: string }>(`/leave/attendance/export?from=${from}&to=${to}`)
+      const exportParams = new URLSearchParams({ from, to })
+      if (employeeId) exportParams.set('employeeId', employeeId)
+      const { url } = await api.get<{ url: string }>(`/leave/attendance/export?${exportParams.toString()}`)
       window.open(url, '_blank', 'noopener,noreferrer')
     } catch (err) {
       setExportError(err instanceof ApiError ? err.message : 'Could not export attendance')
@@ -143,6 +169,7 @@ export function AttendancePage() {
             className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
           />
         </label>
+        {isReviewer && <EmployeeFilter value={employeeId} onChange={setEmployeeId} />}
         <button
           onClick={() => {
             const t = todayInManilaIso()

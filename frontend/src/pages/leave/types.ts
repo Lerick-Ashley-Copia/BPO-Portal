@@ -8,6 +8,7 @@ export interface LeaveRequest {
   endDate: string
   days: number
   reason: string | null
+  useSil: boolean
   status: LeaveRequestStatus
   reviewComment: string | null
   createdAt: string

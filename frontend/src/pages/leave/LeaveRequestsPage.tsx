@@ -17,6 +17,7 @@ function CreateForm({ onCreated }: { onCreated: (r: LeaveRequest) => void }) {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [reason, setReason] = useState('')
+  const [useSil, setUseSil] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -33,11 +34,13 @@ function CreateForm({ onCreated }: { onCreated: (r: LeaveRequest) => void }) {
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
         reason: reason || undefined,
+        useSil,
       })
       onCreated(created)
       setStartDate('')
       setEndDate('')
       setReason('')
+      setUseSil(false)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not submit leave request')
     } finally {
@@ -61,6 +64,10 @@ function CreateForm({ onCreated }: { onCreated: (r: LeaveRequest) => void }) {
         <label className="text-sm text-gray-600">Reason (optional)</label>
         <input value={reason} onChange={(e) => setReason(e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm" />
       </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={useSil} onChange={(e) => setUseSil(e.target.checked)} />
+        Use my SIL balance for this leave (deducted only if HR approves)
+      </label>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button type="submit" disabled={submitting} className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
         {submitting ? 'Submitting…' : 'Request leave'}
@@ -104,6 +111,9 @@ function ReviewRow({ request, onReviewed }: { request: LeaveRequest; onReviewed:
         </span>
       </div>
       {request.reason && <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{request.reason}</p>}
+      <p className="mt-1 text-xs text-gray-500">
+        {request.useSil ? 'Will use SIL balance if approved' : 'Not using SIL balance (unpaid/other)'}
+      </p>
       {request.reviewComment && (
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           <span className="font-medium">Comment:</span> {request.reviewComment}
