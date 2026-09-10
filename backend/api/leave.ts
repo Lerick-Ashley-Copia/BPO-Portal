@@ -9,6 +9,7 @@ import { buildAttendanceXlsx } from '../lib/attendanceReport.js'
 import { getDownloadUrl, putObject } from '../lib/s3.js'
 import { formatDisplayName } from '../lib/names.js'
 import { getClientIp, isOffSiteIp } from '../lib/request.js'
+import { isNotFoundError } from '../lib/errors.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): leave requests + daily attendance
@@ -374,6 +375,72 @@ async function handleMarkAbsent(req: AuthedRequest, res: VercelResponse) {
   res.status(200).json({ id: record.id, employeeId: record.employeeId, date: record.date, status: record.status })
 }
 
+const correctAttendanceSchema = z.object({
+  employeeId: z.string().min(1),
+  date: z.string().regex(dateOnlyPattern, 'date must be YYYY-MM-DD'),
+  status: z.enum(['present', 'absent']).optional(),
+  checkInAt: z.string().datetime().nullable().optional(),
+  checkOutAt: z.string().datetime().nullable().optional(),
+  checkInIp: z.string().nullable().optional(),
+  checkOutIp: z.string().nullable().optional(),
+})
+
+// HR/admin override to fix a specific field on an existing attendance
+// record (e.g. backfilling checkInIp for a check-in that predates IP
+// logging) without going through mark-absent, which only ever clears
+// a record to "absent". Only the fields provided are changed.
+async function handleCorrectAttendance(req: AuthedRequest, res: VercelResponse) {
+  if (!isHrOrAdmin(req)) {
+    res.status(403).json({ message: 'Insufficient permissions' })
+    return
+  }
+
+  const parsed = correctAttendanceSchema.safeParse(req.body)
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.issues[0]?.message ?? 'Invalid request' })
+    return
+  }
+
+  const { employeeId, date: dateStr, status, checkInAt, checkOutAt, checkInIp, checkOutIp } = parsed.data
+  const employee = await prisma.employee.findUnique({ where: { id: employeeId } })
+  if (!employee) {
+    res.status(404).json({ message: 'Employee not found' })
+    return
+  }
+
+  const date = new Date(`${dateStr}T00:00:00.000Z`)
+  const data = {
+    ...(status !== undefined && { status }),
+    ...(checkInAt !== undefined && { checkInAt: checkInAt === null ? null : new Date(checkInAt) }),
+    ...(checkOutAt !== undefined && { checkOutAt: checkOutAt === null ? null : new Date(checkOutAt) }),
+    ...(checkInIp !== undefined && { checkInIp }),
+    ...(checkOutIp !== undefined && { checkOutIp }),
+  }
+
+  let record
+  try {
+    record = await prisma.attendanceRecord.update({ where: { employeeId_date: { employeeId, date } }, data })
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      res.status(404).json({ message: 'No attendance record for that employee/date' })
+      return
+    }
+    throw err
+  }
+
+  logAudit(req.auth.sub, 'correct_attendance', 'attendance', record.id)
+  res.status(200).json({
+    id: record.id,
+    employeeId: record.employeeId,
+    date: record.date,
+    status: record.status,
+    checkInAt: record.checkInAt,
+    checkOutAt: record.checkOutAt,
+    checkInIp: record.checkInIp,
+    checkOutIp: record.checkOutIp,
+  })
+}
+
 async function handler(req: AuthedRequest, res: VercelResponse) {
   const resource = typeof req.query.resource === 'string' ? req.query.resource : undefined
   const sub = typeof req.query.sub === 'string' ? req.query.sub : undefined
@@ -391,6 +458,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
     if (sub === 'checkout' && req.method === 'POST') return handleCheckOut(req, res)
     if (sub === 'export' && req.method === 'GET') return handleExportAttendance(req, res)
     if (sub === 'mark-absent' && req.method === 'POST') return handleMarkAbsent(req, res)
+    if (sub === 'correct' && req.method === 'POST') return handleCorrectAttendance(req, res)
   }
 
   res.status(404).json({ message: 'Not found' })
