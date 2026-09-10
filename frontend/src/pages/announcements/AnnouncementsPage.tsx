@@ -4,7 +4,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncStat
 import { api, ApiError } from '../../services/api'
 import type { Announcement } from './types'
 
-const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' })
+const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'Asia/Manila' })
 
 function CreateForm({ onCreated }: { onCreated: (a: Announcement) => void }) {
   const { guardedAction } = useAuth()

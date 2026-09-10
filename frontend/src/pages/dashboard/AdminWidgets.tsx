@@ -9,7 +9,7 @@ interface Stats {
   teamCount: number
 }
 
-const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila' })
 
 export function AdminWidgets() {
   const [stats, setStats] = useState<Stats | null>(null)

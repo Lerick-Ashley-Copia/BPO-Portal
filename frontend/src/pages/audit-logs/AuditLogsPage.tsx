@@ -2,7 +2,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncStat
 import { useApiData } from '../../hooks/useApiData'
 import type { AuditLogEntry } from './types'
 
-const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila' })
 
 export function AuditLogsPage() {
   const { data, loading, error } = useApiData<AuditLogEntry[]>('/audit-logs?limit=100')
