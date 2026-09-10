@@ -6,4 +6,11 @@
 
 body {
   margin: 0;
+  background-color: #f4faf6;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #051b10;
+  }
 }

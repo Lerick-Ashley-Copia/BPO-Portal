@@ -60,7 +60,7 @@ export function LoginPage() {
             className="w-full rounded border border-gray-300 px-3 py-2"
           />
           <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+            <Link to="/forgot-password" className="text-sm text-green-600 hover:underline">
               Forgot password?
             </Link>
           </div>
@@ -69,7 +69,7 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded bg-green-600 px-3 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>

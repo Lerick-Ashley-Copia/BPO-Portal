@@ -74,7 +74,7 @@ export function DashboardPage() {
           )}
 
           {data && data.length > 0 && (
-            <Link to="/announcements" className="mt-3 inline-block text-sm text-blue-600">
+            <Link to="/announcements" className="mt-3 inline-block text-sm text-green-600">
               View all announcements →
             </Link>
           )}

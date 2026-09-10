@@ -53,14 +53,14 @@ export function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="w-full rounded bg-green-600 px-3 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
             >
               {submitting ? 'Sending…' : 'Send reset link'}
             </button>
           </form>
         )}
         <p className="text-sm text-gray-500">
-          <Link to="/login" className="text-blue-600 hover:underline">
+          <Link to="/login" className="text-green-600 hover:underline">
             Back to sign in
           </Link>
         </p>

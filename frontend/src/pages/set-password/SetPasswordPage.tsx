@@ -84,7 +84,7 @@ export function SetPasswordPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded bg-green-600 px-3 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
           {submitting ? 'Setting password…' : 'Set password and log in'}
         </button>

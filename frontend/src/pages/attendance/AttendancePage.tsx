@@ -182,7 +182,7 @@ export function AttendancePage() {
         <button
           onClick={handleExport}
           disabled={exporting || rangeInvalid}
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
           {exporting ? 'Exporting…' : 'Export to Excel'}
         </button>

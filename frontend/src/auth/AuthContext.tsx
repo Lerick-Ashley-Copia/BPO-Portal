@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   pendingAction.run()
                   setPendingAction(null)
                 }}
-                className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
               >
                 Proceed as Admin
               </button>

@@ -69,7 +69,7 @@ function CreateForm({ onCreated }: { onCreated: (b: Benefit) => void }) {
         <input id="ben-eligibility" value={eligibility} onChange={(e) => setEligibility(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={submitting} className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+      <button type="submit" disabled={submitting} className="rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
         {submitting ? 'Adding…' : 'Add benefit'}
       </button>
     </form>
@@ -164,7 +164,7 @@ function BenefitCard({
           <button
             onClick={save}
             disabled={saving}
-            className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>

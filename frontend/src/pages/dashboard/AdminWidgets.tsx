@@ -64,7 +64,7 @@ export function AdminWidgets() {
               </li>
             ))}
           </ul>
-          <Link to="/audit-logs" className="mt-2 inline-block text-sm text-blue-600">
+          <Link to="/audit-logs" className="mt-2 inline-block text-sm text-green-600">
             View all audit logs →
           </Link>
         </div>

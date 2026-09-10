@@ -69,7 +69,7 @@ function CreateForm({ onCreated }: { onCreated: (r: LeaveRequest) => void }) {
         Use my SIL balance for this leave (deducted only if HR approves)
       </label>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={submitting} className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+      <button type="submit" disabled={submitting} className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
         {submitting ? 'Submitting…' : 'Request leave'}
       </button>
     </form>

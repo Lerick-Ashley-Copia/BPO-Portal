@@ -100,7 +100,7 @@ function UploadForm({ onUploaded }: { onUploaded: (d: Document) => void }) {
         </div>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={uploading} className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+      <button type="submit" disabled={uploading} className="rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
         {uploading ? 'Uploading…' : 'Upload'}
       </button>
     </form>

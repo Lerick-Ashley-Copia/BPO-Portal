@@ -120,7 +120,7 @@ function CreateReportForm({ teams, onCreated }: { teams: Team[]; onCreated: (r: 
         <input type="date" required value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} className="rounded border border-gray-300 px-2 py-1.5 text-sm" />
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={submitting} className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+      <button type="submit" disabled={submitting} className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
         {submitting ? 'Creating…' : 'New report'}
       </button>
     </form>
@@ -210,7 +210,7 @@ function ReportCard({ report, onUpdated }: { report: WeeklyReport; onUpdated: (r
             <button
               onClick={() => transition('submit', { data })}
               disabled={busy}
-              className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-50"
             >
               Submit
             </button>

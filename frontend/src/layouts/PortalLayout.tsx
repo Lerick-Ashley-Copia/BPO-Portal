@@ -110,7 +110,7 @@ export function PortalLayout() {
               end={item.to === '/'}
               className={({ isActive }) =>
                 'shrink-0 ' +
-                (isActive ? 'font-medium text-blue-600' : 'text-gray-600 hover:text-gray-900')
+                (isActive ? 'font-medium text-green-600' : 'text-gray-600 hover:text-gray-900')
               }
             >
               {item.label}
