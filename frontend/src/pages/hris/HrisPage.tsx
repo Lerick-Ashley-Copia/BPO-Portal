@@ -509,8 +509,6 @@ function DirectoryMaintenance({
 }
 
 function EmployeeDirectory() {
-  const { effectiveRoles } = useAuth()
-  const isAdmin = effectiveRoles.includes('admin')
   const [employees, setEmployees] = useState<EmployeeRecord[] | null>(null)
   const [departments, setDepartments] = useState<Department[]>([])
   const [teams, setTeams] = useState<Team[]>([])
@@ -533,100 +531,128 @@ function EmployeeDirectory() {
 
   if (loading) return <LoadingState />
   if (error) return <ErrorState message={error} />
+  if (!employees || employees.length === 0) {
+    return <p className="text-sm text-gray-500 dark:text-gray-400">No employee records yet.</p>
+  }
+
+  return (
+    <Card className="overflow-x-auto !p-0">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-black/5 text-xs uppercase tracking-wide text-gray-500 dark:border-white/10 dark:text-gray-400">
+            <th className="py-3 pl-4 pr-4 font-medium">Employee</th>
+            <th className="py-3 pr-4 font-medium">Position</th>
+            <th className="py-3 pr-4 font-medium">Department</th>
+            <th className="py-3 pr-4 font-medium">Team</th>
+            <th className="py-3 pr-4 font-medium">Status</th>
+            <th className="py-3 pr-4 font-medium">Date Hired</th>
+            <th className="py-3 pr-4 font-medium">SIL Balance</th>
+            <th className="py-3 pr-4 font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {employees.map((employee) => (
+            <EmployeeRow
+              key={employee.id}
+              employee={employee}
+              departments={departments}
+              teams={teams}
+              onSaved={(updated) =>
+                setEmployees((prev) => prev?.map((e) => (e.id === updated.id ? updated : e)) ?? null)
+              }
+            />
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  )
+}
+
+function DirectoryManagement() {
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    api
+      .get<{ departments: Department[]; teams: Team[] }>('/directory')
+      .then((dir) => {
+        setDepartments(dir.departments)
+        setTeams(dir.teams)
+      })
+      .catch((err) => setError(err instanceof ApiError ? err.message : 'Something went wrong'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return <LoadingState />
+  if (error) return <ErrorState message={error} />
 
   return (
     <div>
-      {isAdmin && (
-        <div className="mb-4">
-          <CreateTeamOrDepartment
-            departments={departments}
-            onCreated={(result) => {
-              if (result.department) setDepartments((prev) => [...prev, result.department!])
-              if (result.team) setTeams((prev) => [...prev, result.team!])
-            }}
-          />
-        </div>
-      )}
-
-      {isAdmin && (
-        <DirectoryMaintenance
+      <div className="mb-4">
+        <CreateTeamOrDepartment
           departments={departments}
-          teams={teams}
-          onDepartmentUpdated={(updated) =>
-            setDepartments((prev) => prev.map((d) => (d.id === updated.id ? updated : d)))
-          }
-          onDepartmentDeleted={(id) => setDepartments((prev) => prev.filter((d) => d.id !== id))}
-          onTeamUpdated={(updated) => setTeams((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))}
-          onTeamDeleted={(id) => setTeams((prev) => prev.filter((t) => t.id !== id))}
+          onCreated={(result) => {
+            if (result.department) setDepartments((prev) => [...prev, result.department!])
+            if (result.team) setTeams((prev) => [...prev, result.team!])
+          }}
         />
-      )}
+      </div>
 
-      {(!employees || employees.length === 0) && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">No employee records yet.</p>
-      )}
-
-      {employees && employees.length > 0 && (
-        <Card className="overflow-x-auto !p-0">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-black/5 text-xs uppercase tracking-wide text-gray-500 dark:border-white/10 dark:text-gray-400">
-                <th className="py-3 pl-4 pr-4 font-medium">Employee</th>
-                <th className="py-3 pr-4 font-medium">Position</th>
-                <th className="py-3 pr-4 font-medium">Department</th>
-                <th className="py-3 pr-4 font-medium">Team</th>
-                <th className="py-3 pr-4 font-medium">Status</th>
-                <th className="py-3 pr-4 font-medium">Date Hired</th>
-                <th className="py-3 pr-4 font-medium">SIL Balance</th>
-                <th className="py-3 pr-4 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map((employee) => (
-                <EmployeeRow
-                  key={employee.id}
-                  employee={employee}
-                  departments={departments}
-                  teams={teams}
-                  onSaved={(updated) =>
-                    setEmployees((prev) => prev?.map((e) => (e.id === updated.id ? updated : e)) ?? null)
-                  }
-                />
-              ))}
-            </tbody>
-          </table>
-        </Card>
-      )}
+      <DirectoryMaintenance
+        departments={departments}
+        teams={teams}
+        onDepartmentUpdated={(updated) =>
+          setDepartments((prev) => prev.map((d) => (d.id === updated.id ? updated : d)))
+        }
+        onDepartmentDeleted={(id) => setDepartments((prev) => prev.filter((d) => d.id !== id))}
+        onTeamUpdated={(updated) => setTeams((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))}
+        onTeamDeleted={(id) => setTeams((prev) => prev.filter((t) => t.id !== id))}
+      />
     </div>
   )
 }
 
+type HrisTab = 'profile' | 'employees' | 'directory'
+
 export function HrisPage() {
   const { effectiveRoles } = useAuth()
   const canManage = effectiveRoles.some((r) => r === 'hr' || r === 'admin')
+  const isAdmin = effectiveRoles.includes('admin')
+  const [tab, setTab] = useState<HrisTab>('profile')
+
+  const tabs: { key: HrisTab; label: string }[] = [
+    { key: 'profile', label: 'My Profile' },
+    ...(canManage ? [{ key: 'employees' as const, label: 'Employees' }] : []),
+    ...(isAdmin ? [{ key: 'directory' as const, label: 'Departments & Teams' }] : []),
+  ]
 
   return (
     <div>
       <PageHeader title="HRIS" />
 
-      <section>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          My Profile
-        </h2>
-        <div className="mt-2">
-          <MyProfile />
+      {tabs.length > 1 && (
+        <div className="mb-4 flex gap-1 border-b border-black/5 dark:border-white/10">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition ${
+                tab === t.key
+                  ? 'border-brand-600 text-brand-700 dark:border-brand-400 dark:text-brand-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
-      </section>
-
-      {canManage && (
-        <section className="mt-8">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Employee Directory
-          </h2>
-          <div className="mt-2">
-            <EmployeeDirectory />
-          </div>
-        </section>
       )}
+
+      {tab === 'profile' && <MyProfile />}
+      {tab === 'employees' && canManage && <EmployeeDirectory />}
+      {tab === 'directory' && isAdmin && <DirectoryManagement />}
     </div>
   )
 }
