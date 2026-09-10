@@ -145,8 +145,16 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
   )
 }
 
-function UserRow({ user, onSaved }: { user: ManagedUser; onSaved: (user: ManagedUser) => void }) {
-  const { guardedAction } = useAuth()
+function UserRow({
+  user,
+  onSaved,
+  onDeleted,
+}: {
+  user: ManagedUser
+  onSaved: (user: ManagedUser) => void
+  onDeleted: (id: string) => void
+}) {
+  const { guardedAction, user: currentUser } = useAuth()
   const [editing, setEditing] = useState(false)
   const [firstName, setFirstName] = useState(user.firstName)
   const [lastName, setLastName] = useState(user.lastName)
@@ -157,6 +165,25 @@ function UserRow({ user, onSaved }: { user: ManagedUser; onSaved: (user: Managed
   const [sendingReset, setSendingReset] = useState(false)
   const [resetMessage, setResetMessage] = useState<string | null>(null)
   const [resetError, setResetError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const isSelf = user.id === currentUser?.id
+
+  function remove() {
+    if (!window.confirm(`Delete ${user.name}'s account? This cannot be undone.`)) return
+    setDeleteError(null)
+
+    guardedAction(['admin'], async () => {
+      setDeleting(true)
+      try {
+        await api.delete(`/users/${user.id}`)
+        onDeleted(user.id)
+      } catch (err) {
+        setDeleteError(err instanceof ApiError ? err.message : 'Could not delete this account')
+        setDeleting(false)
+      }
+    })
+  }
 
   function sendResetLink() {
     setResetError(null)
@@ -255,9 +282,19 @@ function UserRow({ user, onSaved }: { user: ManagedUser; onSaved: (user: Managed
             >
               {sendingReset ? 'Sending…' : 'Send reset link'}
             </button>
+            {!isSelf && (
+              <button
+                onClick={remove}
+                disabled={deleting}
+                className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            )}
           </div>
           {resetMessage && <p className="mt-1 text-xs text-green-700 dark:text-green-500">{resetMessage}</p>}
           {resetError && <p className="mt-1 text-xs text-red-600">{resetError}</p>}
+          {deleteError && <p className="mt-1 text-xs text-red-600">{deleteError}</p>}
         </td>
       </tr>
     )
@@ -363,6 +400,7 @@ export function UsersPage() {
                       onSaved={(updated) =>
                         setUsers((prev) => prev?.map((x) => (x.id === updated.id ? updated : x)) ?? null)
                       }
+                      onDeleted={(id) => setUsers((prev) => prev?.filter((x) => x.id !== id) ?? null)}
                     />
                   ))}
                 </tbody>

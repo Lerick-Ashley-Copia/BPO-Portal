@@ -182,12 +182,48 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
   res.status(200).json(serialize(user))
 }
 
+async function handleDelete(req: AuthedRequest, res: VercelResponse, id: string) {
+  if (id === req.auth.sub) {
+    res.status(400).json({ message: "You can't delete your own account" })
+    return
+  }
+
+  // An Employee profile brings HR history with it (attendance, leave
+  // requests) — refuse rather than cascading that away. Setup-pending
+  // accounts with no profile yet (the common "undo a mistaken invite"
+  // case) delete cleanly.
+  const employee = await prisma.employee.findUnique({ where: { userId: id }, select: { id: true } })
+  if (employee) {
+    res.status(409).json({
+      message: 'This user has an employee profile with HR history and cannot be deleted. Remove the employee record first if it truly needs to go.',
+    })
+    return
+  }
+
+  try {
+    await prisma.$transaction([
+      prisma.passwordResetToken.deleteMany({ where: { userId: id } }),
+      prisma.user.delete({ where: { id } }),
+    ])
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      res.status(404).json({ message: 'User not found' })
+      return
+    }
+    throw err
+  }
+
+  logAudit(req.auth.sub, 'delete', 'user', id)
+  res.status(204).end()
+}
+
 async function handler(req: AuthedRequest, res: VercelResponse) {
   const sub = typeof req.query.sub === 'string' ? req.query.sub : undefined
 
   if (!sub && req.method === 'GET') return handleList(res)
   if (!sub && req.method === 'POST') return handleCreate(req, res)
   if (sub && req.method === 'PUT') return handleUpdate(req, res, sub)
+  if (sub && req.method === 'DELETE') return handleDelete(req, res, sub)
 
   res.status(404).json({ message: 'Not found' })
 }
