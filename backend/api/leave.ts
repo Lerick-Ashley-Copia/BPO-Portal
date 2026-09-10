@@ -447,6 +447,29 @@ async function handleCorrectAttendance(req: AuthedRequest, res: VercelResponse) 
   })
 }
 
+// Removes an attendance record outright — for the case correct/mark-
+// absent don't cover: a record that shouldn't exist at all (e.g. the
+// night-shift day-boundary bug that split one shift into two rows).
+async function handleDeleteAttendance(req: AuthedRequest, res: VercelResponse, id: string) {
+  if (!isHrOrAdmin(req)) {
+    res.status(403).json({ message: 'Insufficient permissions' })
+    return
+  }
+
+  try {
+    await prisma.attendanceRecord.delete({ where: { id } })
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      res.status(404).json({ message: 'Attendance record not found' })
+      return
+    }
+    throw err
+  }
+
+  logAudit(req.auth.sub, 'delete', 'attendance', id)
+  res.status(204).end()
+}
+
 async function handler(req: AuthedRequest, res: VercelResponse) {
   const resource = typeof req.query.resource === 'string' ? req.query.resource : undefined
   const sub = typeof req.query.sub === 'string' ? req.query.sub : undefined
@@ -465,6 +488,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
     if (sub === 'export' && req.method === 'GET') return handleExportAttendance(req, res)
     if (sub === 'mark-absent' && req.method === 'POST') return handleMarkAbsent(req, res)
     if (sub === 'correct' && req.method === 'POST') return handleCorrectAttendance(req, res)
+    if (sub && req.method === 'DELETE') return handleDeleteAttendance(req, res, sub)
   }
 
   res.status(404).json({ message: 'Not found' })
