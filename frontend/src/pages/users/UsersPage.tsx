@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
-import type { Role } from '../../auth/types'
+import { ROLE_LABELS, type Role } from '../../auth/types'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
 import { Card, CardForm } from '../../components/ui/Card'
@@ -28,7 +28,7 @@ function RoleCheckboxes({
       {ALL_ROLES.map((role) => (
         <label key={role} className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
           <input type="checkbox" checked={selected.includes(role)} onChange={() => toggle(role)} />
-          {role}
+          {ROLE_LABELS[role]}
         </label>
       ))}
     </div>
@@ -342,7 +342,9 @@ function UserRow({
             </Badge>
           )}
         </td>
-        <td className="py-2.5 pr-4 text-sm text-gray-600 dark:text-gray-400">{user.roles.join(', ')}</td>
+        <td className="py-2.5 pr-4 text-sm text-gray-600 dark:text-gray-400">
+          {user.roles.map((r) => ROLE_LABELS[r]).join(', ')}
+        </td>
         <td className="py-2.5 pr-4">
           <div className="flex flex-wrap gap-1.5">
             <Button size="sm" onClick={startEditing}>

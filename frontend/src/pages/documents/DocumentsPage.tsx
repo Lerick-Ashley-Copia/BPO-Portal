@@ -5,6 +5,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncStat
 import { Card, CardForm } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/ui/PageHeader'
+import { ROLE_LABELS, type Role } from '../../auth/types'
 import type { Document } from './types'
 
 function groupByCategory(documents: Document[]): Map<string, Document[]> {
@@ -29,7 +30,7 @@ function readFileAsBase64(file: File): Promise<string> {
   })
 }
 
-const ROLES = ['employee', 'team_leader', 'manager', 'hr', 'admin']
+const ROLES: Role[] = ['employee', 'team_leader', 'manager', 'hr', 'admin']
 
 function UploadForm({ onUploaded }: { onUploaded: (d: Document) => void }) {
   const { guardedAction } = useAuth()
@@ -106,7 +107,7 @@ function UploadForm({ onUploaded }: { onUploaded: (d: Document) => void }) {
           <select id="doc-access" value={accessLevel} onChange={(e) => setAccessLevel(e.target.value)} className="field">
             {ROLES.map((r) => (
               <option key={r} value={r}>
-                {r === 'employee' ? 'Everyone' : r}
+                {r === 'employee' ? 'Everyone' : ROLE_LABELS[r]}
               </option>
             ))}
           </select>

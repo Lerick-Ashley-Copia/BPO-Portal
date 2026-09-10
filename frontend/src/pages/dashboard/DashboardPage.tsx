@@ -3,17 +3,10 @@ import { useAuth } from '../../auth/AuthContext'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { useApiData } from '../../hooks/useApiData'
 import { Card } from '../../components/ui/Card'
+import { ROLE_LABELS } from '../../auth/types'
 import type { Announcement } from '../announcements/types'
 import { AdminWidgets } from './AdminWidgets'
 import { CheckInPrompt } from './CheckInPrompt'
-
-const roleLabels: Record<string, string> = {
-  employee: 'Employee',
-  team_leader: 'Team Leader',
-  manager: 'Manager',
-  hr: 'HR',
-  admin: 'Administrator',
-}
 
 const quickLinks = [
   { to: '/announcements', label: 'Announcements' },
@@ -36,7 +29,7 @@ export function DashboardPage() {
       </h1>
       {user && (
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          {user.roles.map((role) => roleLabels[role] ?? role).join(', ')}
+          {user.roles.map((role) => ROLE_LABELS[role]).join(', ')}
         </p>
       )}
 

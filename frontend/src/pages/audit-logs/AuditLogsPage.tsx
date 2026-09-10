@@ -2,6 +2,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncStat
 import { useApiData } from '../../hooks/useApiData'
 import { Card } from '../../components/ui/Card'
 import { PageHeader } from '../../components/ui/PageHeader'
+import { humanize } from '../../utils/text'
 import type { AuditLogEntry } from './types'
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila' })
@@ -39,9 +40,9 @@ export function AuditLogsPage() {
                     {dateFormatter.format(new Date(log.createdAt))}
                   </td>
                   <td className="py-2.5 pr-4 text-gray-900 dark:text-gray-200">{log.user}</td>
-                  <td className="py-2.5 pr-4">{log.action}</td>
+                  <td className="py-2.5 pr-4">{humanize(log.action)}</td>
                   <td className="py-2.5 pr-4">
-                    {log.resource}
+                    {humanize(log.resource)}
                     {log.resourceId && (
                       <span className="text-gray-400 dark:text-gray-500"> #{log.resourceId.slice(0, 8)}</span>
                     )}
@@ -54,7 +55,7 @@ export function AuditLogsPage() {
                           : 'font-medium text-red-600 dark:text-red-400'
                       }
                     >
-                      {log.result}
+                      {humanize(log.result)}
                     </span>
                   </td>
                 </tr>

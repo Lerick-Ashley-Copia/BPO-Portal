@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import type { Role } from '../auth/types'
+import { ROLE_LABELS, type Role } from '../auth/types'
 import { api, ApiError } from '../services/api'
 import { Button } from '../components/ui/Button'
 import { useTheme } from '../theme/ThemeContext'
@@ -19,13 +19,7 @@ const navItems = [
   { to: '/audit-logs', label: 'Audit Logs', roles: ['admin'] as const },
 ]
 
-const roleOptions: { value: Role; label: string }[] = [
-  { value: 'employee', label: 'Employee' },
-  { value: 'team_leader', label: 'Team Leader' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'hr', label: 'HR' },
-  { value: 'admin', label: 'Administrator' },
-]
+const roleOptions = (Object.entries(ROLE_LABELS) as [Role, string][]).map(([value, label]) => ({ value, label }))
 
 function RoleSwitcher() {
   const { user, viewAsRole, setViewAsRole } = useAuth()

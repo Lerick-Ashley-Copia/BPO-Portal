@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { api, ApiError } from '../services/api'
-import type { AuthUser, Role } from './types'
+import { ROLE_LABELS, type AuthUser, type Role } from './types'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 
@@ -37,13 +37,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-const roleLabels: Record<Role, string> = {
-  employee: 'Employee',
-  team_leader: 'Team Leader',
-  manager: 'Manager',
-  hr: 'HR',
-  admin: 'Administrator',
-}
+const roleLabels = ROLE_LABELS
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)

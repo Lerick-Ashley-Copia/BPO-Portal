@@ -5,6 +5,7 @@ import { api, ApiError } from '../../services/api'
 import { Card, CardForm } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/ui/PageHeader'
+import { humanize } from '../../utils/text'
 import type { Department, EmployeeRecord, MyEmployeeProfile, Team } from './types'
 
 // dateHired is a date-only value with no meaningful time-of-day, so
@@ -45,7 +46,7 @@ function MyProfile() {
     ['Position', profile.position ?? '—'],
     ['Department', profile.department ?? '—'],
     ['Team', profile.team ?? '—'],
-    ['Status', profile.status],
+    ['Status', humanize(profile.status)],
     ['Date Hired', profile.dateHired ? dateFormatter.format(new Date(profile.dateHired)) : '—'],
     ['Work Email', profile.email],
     ['SIL Balance', `${profile.silBalance} day${profile.silBalance === 1 ? '' : 's'}`],
@@ -121,7 +122,7 @@ function EmployeeRow({
         <td className="py-2.5 pr-4">{employee.position ?? '—'}</td>
         <td className="py-2.5 pr-4">{employee.department ?? '—'}</td>
         <td className="py-2.5 pr-4">{employee.team ?? '—'}</td>
-        <td className="py-2.5 pr-4">{employee.status}</td>
+        <td className="py-2.5 pr-4">{humanize(employee.status)}</td>
         <td className="py-2.5 pr-4">
           {employee.dateHired ? dateFormatter.format(new Date(employee.dateHired)) : '—'}
         </td>
@@ -175,7 +176,7 @@ function EmployeeRow({
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="field py-1">
           {statusOptions.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {humanize(s)}
             </option>
           ))}
         </select>
@@ -206,9 +207,9 @@ function EmployeeRow({
 
 // Deliberately kept out of the regular position/department/team/status
 // edit form — a leave-balance correction is a different, more
-// sensitive kind of edit ("just in case" territory), so it gets its
-// own out-of-band interaction instead of sitting next to routine
-// fields where it'd be easy to change by accident.
+// sensitive kind of edit ("just in case" territory), so it's its own
+// standalone number field rather than sitting next to routine fields
+// where it'd be easy to change by accident. Saves on blur.
 function SilBalanceCell({
   employee,
   onSaved,
@@ -217,27 +218,29 @@ function SilBalanceCell({
   onSaved: (updated: EmployeeRecord) => void
 }) {
   const { guardedAction } = useAuth()
+  const [value, setValue] = useState(String(employee.silBalance))
   const [saving, setSaving] = useState(false)
 
-  function editBalance(e: { preventDefault: () => void }) {
-    e.preventDefault()
-    if (saving) return
+  useEffect(() => {
+    setValue(String(employee.silBalance))
+  }, [employee.silBalance])
+
+  function commit() {
+    const parsed = Number(value)
+    if (!Number.isInteger(parsed) || parsed < 0) {
+      setValue(String(employee.silBalance))
+      return
+    }
+    if (parsed === employee.silBalance) return
 
     guardedAction(['hr', 'admin'], async () => {
-      const input = window.prompt(`New SIL balance for ${employee.name} (days):`, String(employee.silBalance))
-      if (input === null) return
-      const value = Number(input)
-      if (!Number.isInteger(value) || value < 0) {
-        alert('Enter a whole number of days, 0 or more')
-        return
-      }
-
       setSaving(true)
       try {
-        const updated = await api.put<EmployeeRecord>(`/employees/${employee.id}`, { silBalance: value })
+        const updated = await api.put<EmployeeRecord>(`/employees/${employee.id}`, { silBalance: parsed })
         onSaved(updated)
       } catch (err) {
         alert(err instanceof ApiError ? err.message : 'Could not update SIL balance')
+        setValue(String(employee.silBalance))
       } finally {
         setSaving(false)
       }
@@ -245,12 +248,17 @@ function SilBalanceCell({
   }
 
   return (
-    <td
-      className="py-2.5 pr-4 cursor-context-menu select-none align-top"
-      onContextMenu={editBalance}
-      title="Right-click to edit"
-    >
-      {saving ? '…' : `${employee.silBalance} day${employee.silBalance === 1 ? '' : 's'}`}
+    <td className="py-2.5 pr-4 align-top">
+      <input
+        type="number"
+        min={0}
+        step={1}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={commit}
+        disabled={saving}
+        className="field w-20 py-1"
+      />
     </td>
   )
 }

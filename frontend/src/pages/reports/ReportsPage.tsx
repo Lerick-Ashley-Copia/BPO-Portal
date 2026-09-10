@@ -6,6 +6,7 @@ import { Card, CardForm } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { PageHeader } from '../../components/ui/PageHeader'
+import { humanize } from '../../utils/text'
 import type { ReportData, ReportStatus, WeeklyReport } from './types'
 
 interface Team {
@@ -191,7 +192,7 @@ function ReportCard({ report, onUpdated }: { report: WeeklyReport; onUpdated: (r
             {dateFmt(report.periodStart)} – {dateFmt(report.periodEnd)}
           </span>
         </div>
-        <Badge tone={statusTones[report.status]}>{report.status}</Badge>
+        <Badge tone={statusTones[report.status]}>{humanize(report.status)}</Badge>
       </div>
 
       {report.data.managerComments && (

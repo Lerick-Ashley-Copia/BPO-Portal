@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api, ApiError } from '../../services/api'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { Card } from '../../components/ui/Card'
+import { humanize } from '../../utils/text'
 import type { AuditLogEntry } from '../audit-logs/types'
 
 interface Stats {
@@ -65,7 +66,8 @@ export function AdminWidgets() {
             {recentActions.map((log) => (
               <li key={log.id} className="py-1.5 text-gray-600 first:pt-0 last:pb-0 dark:text-gray-400">
                 <span className="text-gray-400 dark:text-gray-500">{dateFormatter.format(new Date(log.createdAt))}</span>{' '}
-                <span className="text-gray-900 dark:text-gray-200">{log.user}</span> — {log.action} {log.resource}
+                <span className="text-gray-900 dark:text-gray-200">{log.user}</span> — {humanize(log.action)}{' '}
+                {humanize(log.resource)}
               </li>
             ))}
           </ul>
