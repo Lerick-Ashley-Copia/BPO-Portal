@@ -8,6 +8,7 @@ import { inclusiveDayCount, minutesIntoManilaDay, todayInManila } from '../lib/d
 import { buildAttendanceXlsx } from '../lib/attendanceReport.js'
 import { getDownloadUrl, putObject } from '../lib/s3.js'
 import { formatDisplayName } from '../lib/names.js'
+import { getClientIp, isOffSiteIp } from '../lib/request.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
 // functions per deployment): leave requests + daily attendance
@@ -202,6 +203,7 @@ async function handleListAttendance(req: AuthedRequest, res: VercelResponse) {
     take: range ? 1000 : 200,
   })
 
+  const reviewer = isHrOrAdmin(req)
   res.status(200).json(
     records.map((r) => ({
       id: r.id,
@@ -210,6 +212,9 @@ async function handleListAttendance(req: AuthedRequest, res: VercelResponse) {
       status: r.status,
       checkInAt: r.checkInAt,
       checkOutAt: r.checkOutAt,
+      // IP/off-site flag is a monitoring detail — only surfaced to HR/Admin, not to the employee themselves.
+      checkInIp: reviewer ? r.checkInIp : undefined,
+      checkInOffSite: reviewer ? isOffSiteIp(r.checkInIp) : undefined,
     })),
   )
 }
@@ -298,7 +303,7 @@ async function handleCheckIn(req: AuthedRequest, res: VercelResponse) {
   }
 
   const record = await prisma.attendanceRecord.create({
-    data: { employeeId: employee.id, date, checkInAt: new Date() },
+    data: { employeeId: employee.id, date, checkInAt: new Date(), checkInIp: getClientIp(req) },
   })
   logAudit(req.auth.sub, 'check_in', 'attendance', record.id)
   res.status(201).json({ checkedIn: true, checkedOut: false, status: record.status, checkInAt: record.checkInAt, checkOutAt: null })
@@ -322,7 +327,7 @@ async function handleCheckOut(req: AuthedRequest, res: VercelResponse) {
 
   const record = await prisma.attendanceRecord.update({
     where: { id: existing.id },
-    data: { checkOutAt: new Date() },
+    data: { checkOutAt: new Date(), checkOutIp: getClientIp(req) },
   })
 
   logAudit(req.auth.sub, 'check_out', 'attendance', record.id)

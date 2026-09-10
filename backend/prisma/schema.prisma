@@ -121,6 +121,8 @@ model AttendanceRecord {
   status     AttendanceStatus @default(present)
   checkInAt  DateTime?        // null for a record HR marked absent
   checkOutAt DateTime?
+  checkInIp  String?          // client IP at check-in, for HR to spot off-site logins
+  checkOutIp String?
   markedBy   String?          // userId of the HR/admin who marked this absent, if applicable
   createdAt  DateTime         @default(now())
 

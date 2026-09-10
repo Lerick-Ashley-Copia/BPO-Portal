@@ -205,7 +205,8 @@ export function AttendancePage() {
                 {isReviewer && <th className="py-2 pr-4 font-medium">Employee</th>}
                 <th className="py-2 pr-4 font-medium">Date</th>
                 <th className="py-2 pr-4 font-medium">Check In</th>
-                <th className="py-2 font-medium">Check Out</th>
+                <th className="py-2 pr-4 font-medium">Check Out</th>
+                {isReviewer && <th className="py-2 font-medium">Check-in IP</th>}
               </tr>
             </thead>
             <tbody>
@@ -214,13 +215,19 @@ export function AttendancePage() {
                   {isReviewer && <td className="py-2 pr-4">{r.employeeName}</td>}
                   <td className="py-2 pr-4">{formatDateOnly(r.date)}</td>
                   {r.status === 'absent' ? (
-                    <td colSpan={2} className="py-2 text-amber-700 dark:text-amber-500">
+                    <td colSpan={isReviewer ? 3 : 2} className="py-2 text-amber-700 dark:text-amber-500">
                       Absent
                     </td>
                   ) : (
                     <>
                       <td className="py-2 pr-4">{timeFmt(r.checkInAt)}</td>
-                      <td className="py-2">{timeFmt(r.checkOutAt)}</td>
+                      <td className="py-2 pr-4">{timeFmt(r.checkOutAt)}</td>
+                      {isReviewer && (
+                        <td className={`py-2 ${r.checkInOffSite ? 'text-amber-700 dark:text-amber-500' : ''}`}>
+                          {r.checkInIp ?? '—'}
+                          {r.checkInOffSite && <span className="ml-1 text-xs">(off-site)</span>}
+                        </td>
+                      )}
                     </>
                   )}
                 </tr>

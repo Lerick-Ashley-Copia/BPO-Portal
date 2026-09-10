@@ -5,4 +5,6 @@ export interface AttendanceRecord {
   status: 'present' | 'absent'
   checkInAt: string | null
   checkOutAt: string | null
+  checkInIp?: string | null
+  checkInOffSite?: boolean
 }
