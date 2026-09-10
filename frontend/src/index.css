@@ -35,20 +35,29 @@
   --color-gold-600: #d97706;
 }
 
+/* Explicitly "light", not "light dark" — theme is driven entirely by
+   the .dark class toggle now, not the OS preference. Leaving this
+   ambiguous meant a device with an OS-level dark preference could
+   resolve unstyled `color` to a light default even while our light
+   theme (light background, no .dark class) was active — light text on
+   light background, invisible everywhere we hadn't set an explicit
+   color class. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 /* Light mode, softened — the original version (a near-white radial
    gradient under near-white cards) was reported as genuinely too
    bright/eye-straining by an actual night-shift user. Still light,
-   just without the blown-out white hotspot. */
+   just without the blown-out white hotspot. Explicit `color` for the
+   same reason color-scheme is now unambiguous above. */
 body {
   margin: 0;
   font-family: var(--font-sans);
   background-color: #e9f2ec;
   background-image: radial-gradient(circle at 50% -10%, #f3f8f4 0%, #e3eee6 45%, #d6e7db 100%);
   min-height: 100svh;
+  color: #111827;
 }
 
 .dark {
