@@ -6,7 +6,7 @@ import { hashPassword } from '../lib/auth.js'
 import { sendEmail } from '../lib/email.js'
 import { requireAuth, type AuthedRequest } from '../lib/middleware.js'
 import { logAudit } from '../lib/audit.js'
-import { isNotFoundError } from '../lib/errors.js'
+import { isNotFoundError, isUniqueConstraintError } from '../lib/errors.js'
 import { formatDisplayName } from '../lib/names.js'
 
 // Consolidated into one function (Vercel Hobby caps at 12 serverless
@@ -31,6 +31,7 @@ const createUserSchema = z.object({
 const updateUserSchema = z
   .object({
     roles: z.array(z.enum(ROLES)).min(1).optional(),
+    email: z.string().email().optional(),
     firstName: z.string().min(1).optional(),
     lastName: z.string().min(1).optional(),
     middleName: z.string().trim().optional().nullable(),
@@ -38,6 +39,7 @@ const updateUserSchema = z
   .refine(
     (data) =>
       data.roles !== undefined ||
+      data.email !== undefined ||
       data.firstName !== undefined ||
       data.lastName !== undefined ||
       data.middleName !== undefined,
@@ -159,7 +161,7 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
     return
   }
 
-  const { roles, firstName, lastName, middleName } = parsed.data
+  const { roles, email, firstName, lastName, middleName } = parsed.data
   const nameChanged = firstName !== undefined || lastName !== undefined || middleName !== undefined
 
   let user
@@ -168,6 +170,7 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
       where: { id },
       data: {
         ...(roles !== undefined ? { roles } : {}),
+        ...(email !== undefined ? { email } : {}),
         ...(firstName !== undefined ? { firstName } : {}),
         ...(lastName !== undefined ? { lastName } : {}),
         ...(middleName !== undefined ? { middleName: middleName || null } : {}),
@@ -179,6 +182,10 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
       res.status(404).json({ message: 'User not found' })
       return
     }
+    if (isUniqueConstraintError(err)) {
+      res.status(409).json({ message: 'A user with that email already exists' })
+      return
+    }
     throw err
   }
 
@@ -188,6 +195,7 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
   // logAudit call sites) so the write is guaranteed to land before the
   // response returns, rather than racing the function's teardown.
   if (roles !== undefined) await logAudit(req.auth.sub, 'update_roles', 'user', id)
+  if (email !== undefined) await logAudit(req.auth.sub, 'update_email', 'user', id)
   if (nameChanged) await logAudit(req.auth.sub, 'update_name', 'user', id)
 
   res.status(200).json(serialize(user))

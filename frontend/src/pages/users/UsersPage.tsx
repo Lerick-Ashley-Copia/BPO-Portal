@@ -232,6 +232,7 @@ function UserRow({
 }) {
   const { guardedAction, user: currentUser } = useAuth()
   const [editing, setEditing] = useState(false)
+  const [email, setEmail] = useState(user.email)
   const [firstName, setFirstName] = useState(user.firstName)
   const [lastName, setLastName] = useState(user.lastName)
   const [middleName, setMiddleName] = useState(user.middleName ?? '')
@@ -282,10 +283,12 @@ function UserRow({
 
   const nameDirty =
     firstName !== user.firstName || lastName !== user.lastName || middleName !== (user.middleName ?? '')
+  const emailDirty = email !== user.email
   const rolesDirty = JSON.stringify([...roles].sort()) !== JSON.stringify([...user.roles].sort())
-  const dirty = nameDirty || rolesDirty
+  const dirty = nameDirty || emailDirty || rolesDirty
 
   function startEditing() {
+    setEmail(user.email)
     setFirstName(user.firstName)
     setLastName(user.lastName)
     setMiddleName(user.middleName ?? '')
@@ -312,8 +315,15 @@ function UserRow({
         // Only the fields that actually changed are sent, so the audit
         // trail records specifically what happened (a name edit and a
         // role change are logged as separate entries server-side).
-        const payload: { roles?: Role[]; firstName?: string; lastName?: string; middleName?: string | null } = {}
+        const payload: {
+          roles?: Role[]
+          email?: string
+          firstName?: string
+          lastName?: string
+          middleName?: string | null
+        } = {}
         if (rolesDirty) payload.roles = roles
+        if (emailDirty) payload.email = email
         if (nameDirty) {
           payload.firstName = firstName
           payload.lastName = lastName
@@ -372,6 +382,14 @@ function UserRow({
       <td className="py-2.5 pl-4 pr-4">
         <div className="space-y-1">
           <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            autoComplete="off"
+            className="field py-1"
+          />
+          <input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="First name"
@@ -393,7 +411,6 @@ function UserRow({
             className="field py-1"
           />
         </div>
-        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
       </td>
       <td className="py-2.5 pr-4">
         <RoleCheckboxes selected={roles} onChange={setRoles} />
