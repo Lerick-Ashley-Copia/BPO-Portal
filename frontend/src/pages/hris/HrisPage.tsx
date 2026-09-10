@@ -103,7 +103,7 @@ function EmployeeRow({
       setError(null)
       try {
         const updated = await api.put<EmployeeRecord>(`/employees/${employee.id}`, {
-          position,
+          position: position || null,
           status,
           departmentId: departmentId || null,
           teamId: teamId || null,

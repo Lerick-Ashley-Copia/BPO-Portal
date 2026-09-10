@@ -21,7 +21,7 @@ const createSchema = z.object({
 const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
 
 const updateSchema = z.object({
-  position: z.string().min(1).optional(),
+  position: z.string().min(1).nullable().optional(),
   status: z.enum(['active', 'on_leave', 'terminated']).optional(),
   departmentId: z.string().uuid().nullable().optional(),
   teamId: z.string().uuid().nullable().optional(),
