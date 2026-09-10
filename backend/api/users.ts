@@ -23,6 +23,9 @@ const createUserSchema = z.object({
   lastName: z.string().min(1),
   middleName: z.string().trim().optional(),
   roles: z.array(z.enum(ROLES)).min(1),
+  position: z.string().trim().min(1).optional(),
+  departmentId: z.string().uuid().optional(),
+  teamId: z.string().uuid().optional(),
 })
 
 const updateUserSchema = z
@@ -96,7 +99,7 @@ async function handleCreate(req: AuthedRequest, res: VercelResponse) {
     return
   }
 
-  const { email, firstName, lastName, middleName, roles } = parsed.data
+  const { email, firstName, lastName, middleName, roles, position, departmentId, teamId } = parsed.data
 
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
@@ -125,7 +128,9 @@ async function handleCreate(req: AuthedRequest, res: VercelResponse) {
   // HRIS/Attendance/Leave — created here so nobody ends up with a
   // login but no employee profile (see employees.ts POST for backfilling
   // accounts that predate this).
-  await prisma.employee.create({ data: { userId: user.id } })
+  await prisma.employee.create({
+    data: { userId: user.id, position: position || null, departmentId: departmentId || null, teamId: teamId || null },
+  })
 
   const token = randomBytes(32).toString('base64url')
   await prisma.passwordResetToken.create({

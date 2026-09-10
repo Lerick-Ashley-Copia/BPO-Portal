@@ -4,6 +4,7 @@ import type { Role } from '../../auth/types'
 import { ErrorState, LoadingState } from '../../components/AsyncState'
 import { api, ApiError } from '../../services/api'
 import type { ManagedUser } from './types'
+import type { Department, Team } from '../hris/types'
 
 const ALL_ROLES: Role[] = ['employee', 'team_leader', 'manager', 'hr', 'admin']
 
@@ -37,9 +38,26 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
   const [lastName, setLastName] = useState('')
   const [middleName, setMiddleName] = useState('')
   const [roles, setRoles] = useState<Role[]>(['employee'])
+  const [position, setPosition] = useState('')
+  const [departmentId, setDepartmentId] = useState('')
+  const [teamId, setTeamId] = useState('')
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    api
+      .get<{ departments: Department[]; teams: Team[] }>('/directory')
+      .then(({ departments, teams }) => {
+        setDepartments(departments)
+        setTeams(teams)
+      })
+      .catch(() => {})
+  }, [])
+
+  const teamsInDepartment = teams.filter((t) => t.departmentId === departmentId)
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -60,6 +78,9 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
           lastName,
           middleName: middleName || undefined,
           roles,
+          position: position || undefined,
+          departmentId: departmentId || undefined,
+          teamId: teamId || undefined,
         })
         onCreated(created)
         setSuccess(`Account created — a setup link was emailed to ${created.email}.`)
@@ -68,6 +89,9 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
         setLastName('')
         setMiddleName('')
         setRoles(['employee'])
+        setPosition('')
+        setDepartmentId('')
+        setTeamId('')
       } catch (err) {
         setError(err instanceof ApiError ? err.message : 'Could not create the account')
       } finally {
@@ -126,6 +150,59 @@ function CreateUserForm({ onCreated }: { onCreated: (user: ManagedUser) => void 
             onChange={(e) => setMiddleName(e.target.value)}
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
           />
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="space-y-1">
+          <label htmlFor="new-position" className="text-sm text-gray-600">
+            Position <span className="text-gray-400">(optional)</span>
+          </label>
+          <input
+            id="new-position"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="new-department" className="text-sm text-gray-600">
+            Department <span className="text-gray-400">(optional)</span>
+          </label>
+          <select
+            id="new-department"
+            value={departmentId}
+            onChange={(e) => {
+              setDepartmentId(e.target.value)
+              setTeamId('')
+            }}
+            className="w-full rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+          >
+            <option value="">—</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="new-team" className="text-sm text-gray-600">
+            Team <span className="text-gray-400">(optional)</span>
+          </label>
+          <select
+            id="new-team"
+            value={teamId}
+            onChange={(e) => setTeamId(e.target.value)}
+            disabled={!departmentId}
+            className="w-full rounded border border-gray-300 px-2 py-2 text-sm disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900"
+          >
+            <option value="">—</option>
+            {teamsInDepartment.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="space-y-1">
