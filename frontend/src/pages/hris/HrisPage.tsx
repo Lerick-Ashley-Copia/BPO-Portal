@@ -444,9 +444,7 @@ function TeamRow({
         </>
       ) : (
         <>
-          <span className="flex-1 text-gray-900 dark:text-gray-100">
-            {team.name} <span className="text-xs text-gray-500 dark:text-gray-400">— {team.department}</span>
-          </span>
+          <span className="flex-1 text-gray-900 dark:text-gray-100">{team.name}</span>
           <Button size="sm" onClick={() => setEditing(true)}>
             Rename
           </Button>
@@ -482,24 +480,30 @@ function DirectoryMaintenance({
       <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
         Departments &amp; Teams
       </h3>
-      <div className="mt-2 grid gap-4 sm:grid-cols-2">
-        <div>
-          <h4 className="text-xs text-gray-500 dark:text-gray-400">Departments</h4>
-          <ul className="mt-1 divide-y divide-black/5 text-sm dark:divide-white/10">
-            {departments.map((d) => (
-              <DepartmentRow key={d.id} department={d} onUpdated={onDepartmentUpdated} onDeleted={onDepartmentDeleted} />
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className="text-xs text-gray-500 dark:text-gray-400">Teams</h4>
-          <ul className="mt-1 divide-y divide-black/5 text-sm dark:divide-white/10">
-            {teams.map((t) => (
-              <TeamRow key={t.id} team={t} onUpdated={onTeamUpdated} onDeleted={onTeamDeleted} />
-            ))}
-          </ul>
-        </div>
-      </div>
+      {/* Nested by department, not two side-by-side flat lists — a team
+          belongs to exactly one department, and a layout that shows
+          them as two independent lists hides that relationship. */}
+      <ul className="mt-2 divide-y divide-black/5 dark:divide-white/10">
+        {departments.map((d) => {
+          const teamsInDepartment = teams.filter((t) => t.departmentId === d.id)
+          return (
+            <li key={d.id} className="py-2">
+              <ul className="text-sm">
+                <DepartmentRow department={d} onUpdated={onDepartmentUpdated} onDeleted={onDepartmentDeleted} />
+              </ul>
+              <ul className="ml-5 mt-1 space-y-0.5 border-l border-black/10 pl-3 text-sm dark:border-white/10">
+                {teamsInDepartment.length === 0 ? (
+                  <li className="py-1 text-xs text-gray-400 dark:text-gray-500">No teams yet</li>
+                ) : (
+                  teamsInDepartment.map((t) => (
+                    <TeamRow key={t.id} team={t} onUpdated={onTeamUpdated} onDeleted={onTeamDeleted} />
+                  ))
+                )}
+              </ul>
+            </li>
+          )
+        })}
+      </ul>
     </Card>
   )
 }
