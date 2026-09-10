@@ -53,7 +53,7 @@ function MyProfile() {
 
   return (
     <Card>
-      <h3 className="font-medium text-gray-900 dark:text-white">{profile.name}</h3>
+      <h3 className="font-medium text-gray-900 dark:text-gray-100">{profile.name}</h3>
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
         {fields.map(([label, value]) => (
           <div key={label}>
@@ -84,6 +84,7 @@ function EmployeeRow({
   const [status, setStatus] = useState(employee.status)
   const [departmentId, setDepartmentId] = useState(employee.departmentId ?? '')
   const [teamId, setTeamId] = useState(employee.teamId ?? '')
+  const [dateHired, setDateHired] = useState(employee.dateHired ? employee.dateHired.slice(0, 10) : '')
   const { guardedAction } = useAuth()
 
   const teamsInDepartment = teams.filter((t) => t.departmentId === departmentId)
@@ -98,6 +99,7 @@ function EmployeeRow({
           status,
           departmentId: departmentId || null,
           teamId: teamId || null,
+          dateHired: dateHired || null,
         })
         onSaved(updated)
         setEditing(false)
@@ -113,13 +115,17 @@ function EmployeeRow({
     return (
       <tr className="border-b border-black/5 transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/5 dark:hover:bg-white/[0.03]">
         <td className="py-2.5 pl-4 pr-4">
-          <div className="font-medium text-gray-900 dark:text-white">{employee.name}</div>
+          <div className="font-medium text-gray-900 dark:text-gray-100">{employee.name}</div>
           <div className="text-xs text-gray-500 dark:text-gray-400">{employee.email}</div>
         </td>
         <td className="py-2.5 pr-4">{employee.position ?? '—'}</td>
         <td className="py-2.5 pr-4">{employee.department ?? '—'}</td>
         <td className="py-2.5 pr-4">{employee.team ?? '—'}</td>
         <td className="py-2.5 pr-4">{employee.status}</td>
+        <td className="py-2.5 pr-4">
+          {employee.dateHired ? dateFormatter.format(new Date(employee.dateHired)) : '—'}
+        </td>
+        <SilBalanceCell employee={employee} onSaved={onSaved} />
         <td className="py-2.5 pr-4">
           <Button size="sm" onClick={() => setEditing(true)}>
             Edit
@@ -132,7 +138,7 @@ function EmployeeRow({
   return (
     <tr className="border-b border-black/5 dark:border-white/5">
       <td className="py-2.5 pl-4 pr-4 align-top">
-        <div className="font-medium text-gray-900 dark:text-white">{employee.name}</div>
+        <div className="font-medium text-gray-900 dark:text-gray-100">{employee.name}</div>
         <div className="text-xs text-gray-500 dark:text-gray-400">{employee.email}</div>
       </td>
       <td className="py-2.5 pr-4 align-top">
@@ -175,6 +181,15 @@ function EmployeeRow({
         </select>
       </td>
       <td className="py-2.5 pr-4 align-top">
+        <input
+          type="date"
+          value={dateHired}
+          onChange={(e) => setDateHired(e.target.value)}
+          className="field py-1"
+        />
+      </td>
+      <SilBalanceCell employee={employee} onSaved={onSaved} />
+      <td className="py-2.5 pr-4 align-top">
         <div className="flex flex-col gap-1">
           <Button size="sm" variant="primary" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
@@ -186,6 +201,57 @@ function EmployeeRow({
         </div>
       </td>
     </tr>
+  )
+}
+
+// Deliberately kept out of the regular position/department/team/status
+// edit form — a leave-balance correction is a different, more
+// sensitive kind of edit ("just in case" territory), so it gets its
+// own out-of-band interaction instead of sitting next to routine
+// fields where it'd be easy to change by accident.
+function SilBalanceCell({
+  employee,
+  onSaved,
+}: {
+  employee: EmployeeRecord
+  onSaved: (updated: EmployeeRecord) => void
+}) {
+  const { guardedAction } = useAuth()
+  const [saving, setSaving] = useState(false)
+
+  function editBalance(e: { preventDefault: () => void }) {
+    e.preventDefault()
+    if (saving) return
+
+    guardedAction(['hr', 'admin'], async () => {
+      const input = window.prompt(`New SIL balance for ${employee.name} (days):`, String(employee.silBalance))
+      if (input === null) return
+      const value = Number(input)
+      if (!Number.isInteger(value) || value < 0) {
+        alert('Enter a whole number of days, 0 or more')
+        return
+      }
+
+      setSaving(true)
+      try {
+        const updated = await api.put<EmployeeRecord>(`/employees/${employee.id}`, { silBalance: value })
+        onSaved(updated)
+      } catch (err) {
+        alert(err instanceof ApiError ? err.message : 'Could not update SIL balance')
+      } finally {
+        setSaving(false)
+      }
+    })
+  }
+
+  return (
+    <td
+      className="py-2.5 pr-4 cursor-context-menu select-none align-top"
+      onContextMenu={editBalance}
+      title="Right-click to edit"
+    >
+      {saving ? '…' : `${employee.silBalance} day${employee.silBalance === 1 ? '' : 's'}`}
+    </td>
   )
 }
 
@@ -317,6 +383,10 @@ function EmployeeDirectory() {
                 <th className="py-3 pr-4 font-medium">Department</th>
                 <th className="py-3 pr-4 font-medium">Team</th>
                 <th className="py-3 pr-4 font-medium">Status</th>
+                <th className="py-3 pr-4 font-medium">Date Hired</th>
+                <th className="py-3 pr-4 font-medium" title="Right-click a value to edit">
+                  SIL Balance
+                </th>
                 <th className="py-3 pr-4 font-medium">Actions</th>
               </tr>
             </thead>

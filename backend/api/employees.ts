@@ -18,11 +18,15 @@ const createSchema = z.object({
   position: z.string().min(1).nullable().optional(),
 })
 
+const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
+
 const updateSchema = z.object({
   position: z.string().min(1).optional(),
   status: z.enum(['active', 'on_leave', 'terminated']).optional(),
   departmentId: z.string().uuid().nullable().optional(),
   teamId: z.string().uuid().nullable().optional(),
+  dateHired: z.string().regex(dateOnlyPattern, 'dateHired must be YYYY-MM-DD').nullable().optional(),
+  silBalance: z.number().int().min(0).optional(),
 })
 
 const employeeSelect = {
@@ -128,12 +132,20 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
   }
   const parsed = updateSchema.safeParse(req.body)
   if (!parsed.success) {
-    res.status(400).json({ message: 'Invalid update payload' })
+    res.status(400).json({ message: parsed.error.issues[0]?.message ?? 'Invalid update payload' })
     return
   }
+
+  const { dateHired, silBalance, ...rest } = parsed.data
+  const data = {
+    ...rest,
+    ...(dateHired !== undefined && { dateHired: dateHired === null ? null : new Date(`${dateHired}T00:00:00.000Z`) }),
+    ...(silBalance !== undefined && { silBalance }),
+  }
+
   let employee
   try {
-    employee = await prisma.employee.update({ where: { id }, data: parsed.data, ...employeeSelect })
+    employee = await prisma.employee.update({ where: { id }, data, ...employeeSelect })
   } catch (err) {
     if (isNotFoundError(err)) {
       res.status(404).json({ message: 'Employee not found' })
@@ -141,7 +153,13 @@ async function handleUpdate(req: AuthedRequest, res: VercelResponse, id: string)
     }
     throw err
   }
-  logAudit(req.auth.sub, 'update', 'employee', id)
+
+  // SIL balance gets its own audit entry — a leave-day correction is a
+  // more sensitive change than a position/status/team edit and is
+  // worth being able to find in the log on its own.
+  if (silBalance !== undefined) logAudit(req.auth.sub, 'update_sil_balance', 'employee', id)
+  if (Object.keys(rest).length > 0 || dateHired !== undefined) logAudit(req.auth.sub, 'update', 'employee', id)
+
   res.status(200).json(serialize(employee))
 }
 
