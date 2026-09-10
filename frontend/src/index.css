@@ -113,6 +113,29 @@ body {
   select option {
     color: #111827 !important;
   }
+
+  /* Chrome/Edge ignore background-color/color on an autofilled input —
+     they paint their own gray-blue fill and only respect it via this
+     specific box-shadow-inset + -webkit-text-fill-color trick, plus an
+     absurdly long background-color transition to stop the initial
+     yellow/blue flash before it applies. Without this, every
+     browser-autofilled field (login, set-password) shows that fill
+     instead of our .field styling. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #111827;
+    box-shadow: 0 0 0 1000px #ffffff inset;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #e5e7eb;
+    box-shadow: 0 0 0 1000px #11291d inset;
+    transition: background-color 9999s ease-in-out 0s;
+  }
 }
 
 @layer components {
